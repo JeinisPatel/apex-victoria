@@ -191,7 +191,7 @@
 <div class="tc" id="tc-boost">&#9889;</div>
 <div id="kbd-legend">
   <b>V</b> view &nbsp; <b>P</b> pit &nbsp; <b>R</b> mirrors &nbsp; <b>N</b> music &nbsp; <b>M</b> mute
-  &nbsp;<span style="opacity:.5">·</span>&nbsp; <span class="vtag">v27</span>
+  &nbsp;<span style="opacity:.5">·</span>&nbsp; <span class="vtag">v28</span>
 </div>
 <div id="tc-strip">
   <div class="tcbtn" id="tc-view"><span class="ic">◱</span><span class="lb">VIEW</span></div>
@@ -533,7 +533,7 @@ function tryBoost(){
 }
 const state={running:false,started:false,t:0,raceT:0,countdown:0,over:false,msgT:0,view:"cockpit",mirrors:true,wx:"dry",rain:0,paused:false,mode:"career",tut:0,tutStep:0,gear:0,rpm:0,fog:0,glare:0,
   camAccel:0,camFov:0,camPitch:0,camKerb:0,prevV:0,prevYaw:0,
-  yellowT:0,yellowAt:0,cheer:0,lastPos:99,tod:0,passCool:0};
+  yellowT:0,yellowAt:0,tod:0,passCool:0};
 let tutorialDone=false;
 
 function offTrackDist(c){const p=lp(c.idx);return Math.hypot(c.x-p.x,c.y-p.y);}
@@ -1168,12 +1168,6 @@ function update(dt){
   }
   checkCallouts();
   const st=standings(), p=st.indexOf(player)+1;
-  /* crowd cheer when the player GAINS a place (pulls ahead of a rival) */
-  if(state.started&&!player.finished){
-    if(p<state.lastPos && state.lastPos!==99){ state.cheer=Math.min(0.28,(state.cheer||0)+0.22); sfxCheer&&sfxCheer(); }
-    state.lastPos=p;
-  }
-  if(state.cheer>0)state.cheer=Math.max(0,state.cheer-dt*0.08);
   document.getElementById("pos").innerHTML=p+"<span>/"+cars.length+"</span>";
   document.getElementById("lap").textContent=Math.min(player.lap,LAPS);
   document.getElementById("laps").textContent=LAPS;
@@ -2628,7 +2622,7 @@ function draw(){
 
 /* ---------------- sound (WebAudio, fully synthesized) ---------------- */
 let AC=null, master=null, nbuf=null, muted=false;
-const eng={osc:[]}, sk={}, gr={}, wind={}, crowd={};
+const eng={osc:[]}, sk={}, gr={}, wind={};
 function initAudio(){
   if(AC||typeof window==="undefined")return;
   const Ctor=window.AudioContext||window.webkitAudioContext;
@@ -2649,7 +2643,6 @@ function initAudio(){
   Object.assign(sk,noiseChain("bandpass",950));  // tyre squeal
   Object.assign(gr,noiseChain("lowpass",230));   // gravel rumble
   Object.assign(wind,noiseChain("lowpass",520));// wind rush (soft, no hiss)
-  Object.assign(crowd,noiseChain("bandpass",1100));// crowd murmur/cheer (brighter, cuts through)
   // engine: layered oscillators through a shared lowpass
   const engFilter=AC.createBiquadFilter();engFilter.type="lowpass";engFilter.frequency.value=400;
   const engOut=AC.createGain();engOut.gain.value=1;
@@ -2746,20 +2739,6 @@ function musicTick(){
   }
 }
 function sfxShift(){if(!AC||muted)return;blip(520,0.05,"square",0.06,360);}
-function sfxCheer(){if(!AC||muted)return;try{const t=AC.currentTime;
-  const o=AC.createBufferSource();o.buffer=nbuf;o.loop=true;
-  const f=AC.createBiquadFilter();f.type="bandpass";f.Q.value=0.8;
-  f.frequency.setValueAtTime(700,t);f.frequency.linearRampToValueAtTime(1900,t+0.5);
-  const g=AC.createGain();g.gain.setValueAtTime(0.001,t);
-  g.gain.linearRampToValueAtTime(0.32,t+0.18);g.gain.linearRampToValueAtTime(0.18,t+0.6);g.gain.exponentialRampToValueAtTime(0.001,t+1.4);
-  o.connect(f);f.connect(g);g.connect(master);o.start(t);o.stop(t+1.5);
-  /* a couple of bright whistle blips riding on top, like whoops in the stand */
-  for(let i=0;i<3;i++){const b=AC.createOscillator();b.type="sine";
-    const bg=AC.createGain();const tt=t+0.1+i*0.12;
-    b.frequency.setValueAtTime(900+i*180,tt);b.frequency.linearRampToValueAtTime(1500+i*180,tt+0.12);
-    bg.gain.setValueAtTime(0.001,tt);bg.gain.linearRampToValueAtTime(0.05,tt+0.05);bg.gain.exponentialRampToValueAtTime(0.001,tt+0.22);
-    b.connect(bg);bg.connect(master);b.start(tt);b.stop(tt+0.24);}
-  }catch(e){}}
 function sfxWhoosh(relV){if(!AC||muted)return;try{const t=AC.currentTime;const o=AC.createBufferSource();o.buffer=nbuf;o.loop=true;
   const f=AC.createBiquadFilter();f.type="bandpass";f.Q.value=1.2;
   const amp=Math.min(0.18,0.06+relV/1400);
@@ -2819,14 +2798,7 @@ function audioUpdate(){
     const wlvl=Math.max(0,spd-0.65)/0.35;     /* silent until 65%, ramps in after */
     wind.g.gain.setTargetAtTime(wlvl*wlvl*0.05,AC.currentTime,0.15);
     if(wind.f)wind.f.frequency.setTargetAtTime(360+spd*260,AC.currentTime,0.15);}
-  /* crowd: faint base murmur, swelling into a clear bright cheer when you pull ahead */
-  if(crowd.g){
-    let lvl=racing?0.02:0.0;
-    lvl+=(state.cheer||0)*1.6;                 /* cheer weighted up so it is audible */
-    crowd.g.gain.setTargetAtTime(Math.min(0.4,lvl),AC.currentTime,0.1);
-    /* sweep the band upward during a cheer so it reads as a roar lifting */
-    if(crowd.f)crowd.f.frequency.setTargetAtTime(900+(state.cheer||0)*1400,AC.currentTime,0.15);
-  }
+
   const grav=racing&&player.slip>0.2?Math.min(1,v/200)*player.slip:0;
   gr.g.gain.setTargetAtTime(grav*0.3,AC.currentTime,0.05);
   musicTick();
@@ -2887,7 +2859,7 @@ if(touchMode&&typeof document.body!=="undefined"&&document.body){
 /* ---------------- boot ---------------- */
 buildTrack(false);
 renderGarage();
-(function(){const b=document.getElementById("buildtag");if(b)b.textContent="engine ready · v27";})();
+(function(){const b=document.getElementById("buildtag");if(b)b.textContent="engine ready · v28";})();
 let last=performance.now();
 let frameErrs=0;
 function loop(now){
