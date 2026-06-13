@@ -191,7 +191,7 @@
 <div class="tc" id="tc-boost">&#9889;</div>
 <div id="kbd-legend">
   <b>V</b> view &nbsp; <b>P</b> pit &nbsp; <b>R</b> mirrors &nbsp; <b>N</b> music &nbsp; <b>M</b> mute
-  &nbsp;<span style="opacity:.5">·</span>&nbsp; <span class="vtag">v26</span>
+  &nbsp;<span style="opacity:.5">·</span>&nbsp; <span class="vtag">v27</span>
 </div>
 <div id="tc-strip">
   <div class="tcbtn" id="tc-view"><span class="ic">◱</span><span class="lb">VIEW</span></div>
@@ -1170,7 +1170,7 @@ function update(dt){
   const st=standings(), p=st.indexOf(player)+1;
   /* crowd cheer when the player GAINS a place (pulls ahead of a rival) */
   if(state.started&&!player.finished){
-    if(p<state.lastPos && state.lastPos!==99){ state.cheer=Math.min(0.2,(state.cheer||0)+0.16); }
+    if(p<state.lastPos && state.lastPos!==99){ state.cheer=Math.min(0.28,(state.cheer||0)+0.22); sfxCheer&&sfxCheer(); }
     state.lastPos=p;
   }
   if(state.cheer>0)state.cheer=Math.max(0,state.cheer-dt*0.08);
@@ -1278,12 +1278,13 @@ const LAND=[
   {x:2380,y:2240,t:"geese", label:"",ph:1.3},
 ];
 function legLights(c,x,y,w,h,domeR){ // the famous outline of lights
-  c.fillStyle="#ffd97a";
-  const step=14;
-  for(let k=0;k<=w;k+=step){c.fillRect(x-w/2+k-1,y-1,2.4,2.4);c.fillRect(x-w/2+k-1,y+h-1,2.4,2.4);}
-  for(let k=0;k<=h;k+=step){c.fillRect(x-w/2-1,y+k-1,2.4,2.4);c.fillRect(x+w/2-1,y+k-1,2.4,2.4);}
-  for(let a=0;a<=Math.PI;a+=0.32)
-    c.fillRect(x+Math.cos(Math.PI+a)*domeR-1, y+Math.sin(Math.PI+a)*domeR-1,2.4,2.4);
+  c.fillStyle="#ffe6a0";
+  const step=12;
+  for(let k=0;k<=w;k+=step){c.fillRect(x-w/2+k-1,y-1,2.2,2.2);c.fillRect(x-w/2+k-1,y+h-1,2.2,2.2);}
+  for(let k=0;k<=h;k+=step){c.fillRect(x-w/2-1,y+k-1,2.2,2.2);c.fillRect(x+w/2-1,y+k-1,2.2,2.2);}
+  /* main dome ring (dome centred near top) */
+  for(let a=0;a<=Math.PI*2;a+=0.4)
+    c.fillRect(x+Math.cos(a)*domeR-1, (y+34)+Math.sin(a)*domeR-1,2.2,2.2);
 }
 function drawLandTop(l,camX,camY){
   const bob=l.bob?Math.sin(state.t*1.4+l.x)*2.2:0;
@@ -1291,12 +1292,26 @@ function drawLandTop(l,camX,camY){
   cx.save();cx.translate(x,y);
   switch(l.t){
     case "leg":{
-      cx.fillStyle=isNight?"#6e6a60":"#b8b2a4";cx.fillRect(-150,-64,300,128);
-      cx.fillStyle=isNight?"#1d4a3c":"#2e7d63";
-      cx.beginPath();cx.arc(0,0,26,0,7);cx.fill();
-      cx.beginPath();cx.arc(-108,-36,11,0,7);cx.fill();cx.beginPath();cx.arc(108,-36,11,0,7);cx.fill();
+      const stone=isNight?"#544f46":"#b8b2a4", stoneD=isNight?"#444038":"#9a917d";
+      cx.fillStyle=stone;cx.fillRect(-150,-64,300,128);
+      cx.fillStyle=stoneD;cx.fillRect(-52,-78,104,142);          /* central bay */
+      cx.fillStyle=stoneD;cx.fillRect(-150,-72,40,136);cx.fillRect(110,-72,40,136); /* wings */
+      /* window rows (lit warm at night) */
+      for(let row=0;row<3;row++){const wy=-44+row*30;
+        for(let i=0;i<14;i++){const wx=-140+i*20.5;if(Math.abs(wx)<14)continue;
+          cx.fillStyle=isNight?(((i*7+row*3)%5!==0)?"#ffd98a":"#2a2a30"):"#7a8088";
+          cx.fillRect(wx-3,wy,6,9);}}
+      /* domes */
+      cx.fillStyle=isNight?"#1f5244":"#3a8f74";
+      cx.beginPath();cx.arc(0,-30,30,0,7);cx.fill();             /* main dome */
+      cx.fillStyle="#d9b44a";cx.fillRect(-2,-64,4,8);            /* gold figure */
+      cx.fillStyle=isNight?"#1f5244":"#3a8f74";
+      cx.beginPath();cx.arc(-78,-40,12,0,7);cx.fill();cx.beginPath();cx.arc(78,-40,12,0,7);cx.fill();
+      cx.beginPath();cx.arc(-130,-44,8,0,7);cx.fill();cx.beginPath();cx.arc(130,-44,8,0,7);cx.fill();
+      /* entrance arch + lawn strip */
+      cx.fillStyle=isNight?"#ffcf78":"#7a715c";cx.fillRect(-10,40,20,24);
       cx.fillStyle=isNight?"#3a4a3a":"#5a7a4a";cx.fillRect(-150,70,300,24);
-      if(isNight)legLights(cx,0,-64,300,128,26);
+      if(isNight)legLights(cx,0,-64,300,128,30);
       break;}
     case "emp":{
       cx.fillStyle=isNight?"#4e2e24":"#8a4a38";cx.fillRect(-110,-65,220,130);
@@ -1547,19 +1562,78 @@ function drawLandSprite(l,p,f){
   cx.save();
   switch(l.t){
     case "leg":{
-      const w=360*sc,h=120*sc,dr=58*sc;
-      cx.fillStyle=isNight?"#57544b":"#a9a294";cx.fillRect(x-w/2,y-h,w,h);
-      cx.fillStyle=isNight?"#403e37":"#8d877b";
-      cx.fillRect(x-w/2,y-h*1.18,w*0.16,h*1.18);cx.fillRect(x+w/2-w*0.16,y-h*1.18,w*0.16,h*1.18);
-      cx.fillStyle=isNight?"#1d4a3c":"#2e7d63";
-      cx.beginPath();cx.arc(x,y-h,dr,Math.PI,0);cx.closePath();cx.fill();
-      cx.fillRect(x-3*sc,y-h-dr-16*sc,6*sc,16*sc);
+      const w=360*sc,h=120*sc,dr=46*sc;
+      const stone=isNight?"#4a4740":"#b8b09c", stoneD=isNight?"#3a3833":"#9a917d";
+      const dome=isNight?"#1f5244":"#3a8f74", domeD=isNight?"#163d33":"#2e7d63";
+      const winLit="#ffd98a", winDark=isNight?"#2a2a30":"#5b6168";
+      const bulb="#ffe6a0";
+      /* ---- main façade block ---- */
+      cx.fillStyle=stone;cx.fillRect(x-w/2,y-h,w,h);
+      /* central projecting bay (taller) */
+      cx.fillStyle=stoneD;cx.fillRect(x-w*0.17,y-h*1.16,w*0.34,h*1.16);
+      /* end wings (slightly forward) + corner towers */
+      cx.fillStyle=stoneD;
+      cx.fillRect(x-w/2,y-h*1.06,w*0.14,h*1.06);cx.fillRect(x+w/2-w*0.14,y-h*1.06,w*0.14,h*1.06);
+      /* ---- rows of arched windows across the façade ---- */
+      const cols=14, gap=w/cols;
+      for(let row=0;row<3;row++){
+        const wy=y-h*0.86+row*h*0.30, wh=h*0.20, ww=gap*0.46;
+        for(let i=0;i<cols;i++){
+          const wx=x-w/2+gap*(i+0.5);
+          if(Math.abs(wx-x)<w*0.05)continue;         /* leave space for the central arch */
+          /* lit at night in a warm scatter, dark glass by day */
+          const lit=isNight && ((i*7+row*3)%5!==0);
+          cx.fillStyle=lit?winLit:winDark;
+          cx.fillRect(wx-ww/2,wy,ww,wh*0.8);
+          cx.beginPath();cx.arc(wx,wy,ww/2,Math.PI,0);cx.fill();   /* arched top */
+        }
+      }
+      /* ---- grand entrance arch ---- */
+      cx.fillStyle=isNight?"#2a2620":"#7a715c";
+      cx.fillRect(x-w*0.05,y-h*0.5,w*0.1,h*0.5);
+      cx.beginPath();cx.arc(x,y-h*0.5,w*0.05,Math.PI,0);cx.fill();
+      if(isNight){cx.fillStyle="#ffcf78";cx.fillRect(x-w*0.035,y-h*0.42,w*0.07,h*0.42);}
+      /* ---- central dome on a drum, flanked by two small domes ---- */
+      /* drum */
+      cx.fillStyle=stoneD;cx.fillRect(x-dr*0.7,y-h*1.16-dr*0.5,dr*1.4,dr*0.5);
+      /* main dome */
+      cx.fillStyle=dome;cx.beginPath();cx.arc(x,y-h*1.16-dr*0.5,dr,Math.PI,0);cx.closePath();cx.fill();
+      cx.fillStyle=domeD;cx.beginPath();cx.arc(x,y-h*1.16-dr*0.5,dr,Math.PI*1.05,Math.PI*1.5);cx.closePath();cx.fill();
+      /* lantern + the golden figure on top */
+      cx.fillStyle=stoneD;cx.fillRect(x-dr*0.12,y-h*1.16-dr*1.18,dr*0.24,dr*0.3);
+      cx.fillStyle="#d9b44a";cx.fillRect(x-2*sc,y-h*1.16-dr*1.34,4*sc,dr*0.18);
+      /* two flanking small domes/towers */
+      for(const sgn of [-1,1]){
+        const tx=x+sgn*w*0.26, ty=y-h*1.06;
+        cx.fillStyle=stoneD;cx.fillRect(tx-dr*0.3,ty-dr*0.4,dr*0.6,dr*0.4);
+        cx.fillStyle=dome;cx.beginPath();cx.arc(tx,ty-dr*0.4,dr*0.3,Math.PI,0);cx.closePath();cx.fill();
+        cx.fillStyle="#d9b44a";cx.fillRect(tx-1.5*sc,ty-dr*0.4-dr*0.42,3*sc,dr*0.12);
+      }
+      /* corner-tower cupolas at the wing ends */
+      for(const sgn of [-1,1]){
+        const tx=x+sgn*(w/2-w*0.07);
+        cx.fillStyle=dome;cx.beginPath();cx.arc(tx,y-h*1.06,dr*0.22,Math.PI,0);cx.closePath();cx.fill();
+      }
+      /* ---- the famous outline lights at night ---- */
       if(isNight){
-        cx.fillStyle="#ffd97a";
-        const step=Math.max(6,13*sc);
-        for(let k=0;k<=w;k+=step)cx.fillRect(x-w/2+k-1,y-h-1,2.2,2.2);
-        for(let a=0;a<=Math.PI;a+=0.26)
-          cx.fillRect(x+Math.cos(Math.PI+a)*dr-1,y-h+Math.sin(Math.PI+a)*dr-1,2.2,2.2);
+        cx.fillStyle=bulb;
+        const step=Math.max(5,gap*0.5);
+        /* roofline of the main façade + central bay + wings */
+        for(let k=0;k<=w;k+=step)cx.fillRect(x-w/2+k-1,y-h-1,2.0,2.0);
+        for(let k=0;k<=w*0.34;k+=step)cx.fillRect(x-w*0.17+k-1,y-h*1.16-1,2.0,2.0);
+        /* outline of the main dome */
+        for(let a=0;a<=Math.PI;a+=0.22)
+          cx.fillRect(x+Math.cos(Math.PI+a)*dr-1,(y-h*1.16-dr*0.5)+Math.sin(Math.PI+a)*dr-1,2.0,2.0);
+        /* vertical strings down the central bay edges */
+        for(let k=0;k<5;k++){const yy=y-h*1.1+k*h*0.22;
+          cx.fillRect(x-w*0.17-1,yy,2,2);cx.fillRect(x+w*0.17-1,yy,2,2);}
+        /* small dome outlines */
+        for(const sgn of [-1,1]){const tx=x+sgn*w*0.26, ty=y-h*1.06-dr*0.4;
+          for(let a=0;a<=Math.PI;a+=0.5)cx.fillRect(tx+Math.cos(Math.PI+a)*dr*0.3-1,ty+Math.sin(Math.PI+a)*dr*0.3-1,1.8,1.8);}
+        /* warm wash glow from the building */
+        const gl=cx.createRadialGradient(x,y-h*0.7,dr,x,y-h*0.7,w*0.7);
+        gl.addColorStop(0,"rgba(255,210,120,0.12)");gl.addColorStop(1,"rgba(255,210,120,0)");
+        cx.fillStyle=gl;cx.fillRect(x-w*0.7,y-h*1.6,w*1.4,h*1.9);
       }
       break;}
     case "emp":{
@@ -2574,8 +2648,8 @@ function initAudio(){
   }
   Object.assign(sk,noiseChain("bandpass",950));  // tyre squeal
   Object.assign(gr,noiseChain("lowpass",230));   // gravel rumble
-  Object.assign(wind,noiseChain("highpass",680));// wind rush at speed
-  Object.assign(crowd,noiseChain("bandpass",430));// crowd murmur/cheer (filtered noise swell)
+  Object.assign(wind,noiseChain("lowpass",520));// wind rush (soft, no hiss)
+  Object.assign(crowd,noiseChain("bandpass",1100));// crowd murmur/cheer (brighter, cuts through)
   // engine: layered oscillators through a shared lowpass
   const engFilter=AC.createBiquadFilter();engFilter.type="lowpass";engFilter.frequency.value=400;
   const engOut=AC.createGain();engOut.gain.value=1;
@@ -2672,6 +2746,20 @@ function musicTick(){
   }
 }
 function sfxShift(){if(!AC||muted)return;blip(520,0.05,"square",0.06,360);}
+function sfxCheer(){if(!AC||muted)return;try{const t=AC.currentTime;
+  const o=AC.createBufferSource();o.buffer=nbuf;o.loop=true;
+  const f=AC.createBiquadFilter();f.type="bandpass";f.Q.value=0.8;
+  f.frequency.setValueAtTime(700,t);f.frequency.linearRampToValueAtTime(1900,t+0.5);
+  const g=AC.createGain();g.gain.setValueAtTime(0.001,t);
+  g.gain.linearRampToValueAtTime(0.32,t+0.18);g.gain.linearRampToValueAtTime(0.18,t+0.6);g.gain.exponentialRampToValueAtTime(0.001,t+1.4);
+  o.connect(f);f.connect(g);g.connect(master);o.start(t);o.stop(t+1.5);
+  /* a couple of bright whistle blips riding on top, like whoops in the stand */
+  for(let i=0;i<3;i++){const b=AC.createOscillator();b.type="sine";
+    const bg=AC.createGain();const tt=t+0.1+i*0.12;
+    b.frequency.setValueAtTime(900+i*180,tt);b.frequency.linearRampToValueAtTime(1500+i*180,tt+0.12);
+    bg.gain.setValueAtTime(0.001,tt);bg.gain.linearRampToValueAtTime(0.05,tt+0.05);bg.gain.exponentialRampToValueAtTime(0.001,tt+0.22);
+    b.connect(bg);bg.connect(master);b.start(tt);b.stop(tt+0.24);}
+  }catch(e){}}
 function sfxWhoosh(relV){if(!AC||muted)return;try{const t=AC.currentTime;const o=AC.createBufferSource();o.buffer=nbuf;o.loop=true;
   const f=AC.createBiquadFilter();f.type="bandpass";f.Q.value=1.2;
   const amp=Math.min(0.18,0.06+relV/1400);
@@ -2726,16 +2814,18 @@ function audioUpdate(){
   state.gear=racing?gear+1:0; state.rpm=rev;
   const skid=racing?Math.max(player.drift,player.slip*0.4)*Math.min(1,v/150):0;
   sk.g.gain.setTargetAtTime(skid*0.2,AC.currentTime,0.05);
-  /* wind rush: rises with speed */
+  /* wind rush: only past ~65% speed, very soft, low-passed so it doesn't hiss over the engine */
   if(wind.g){const spd=racing?Math.min(1,v/(player.maxv||560)):0;
-    wind.g.gain.setTargetAtTime(spd*spd*0.12,AC.currentTime,0.1);
-    if(wind.f)wind.f.frequency.setTargetAtTime(680+spd*900,AC.currentTime,0.1);}
-  /* crowd: gentle base murmur while racing, swelling into a cheer when you pull ahead */
+    const wlvl=Math.max(0,spd-0.65)/0.35;     /* silent until 65%, ramps in after */
+    wind.g.gain.setTargetAtTime(wlvl*wlvl*0.05,AC.currentTime,0.15);
+    if(wind.f)wind.f.frequency.setTargetAtTime(360+spd*260,AC.currentTime,0.15);}
+  /* crowd: faint base murmur, swelling into a clear bright cheer when you pull ahead */
   if(crowd.g){
-    let lvl=racing?0.03:0.0;
-    lvl+=state.cheer||0;
-    crowd.g.gain.setTargetAtTime(Math.min(0.22,lvl),AC.currentTime,0.15);
-    if(crowd.f)crowd.f.frequency.setTargetAtTime(430+(state.cheer||0)*600,AC.currentTime,0.2);
+    let lvl=racing?0.02:0.0;
+    lvl+=(state.cheer||0)*1.6;                 /* cheer weighted up so it is audible */
+    crowd.g.gain.setTargetAtTime(Math.min(0.4,lvl),AC.currentTime,0.1);
+    /* sweep the band upward during a cheer so it reads as a roar lifting */
+    if(crowd.f)crowd.f.frequency.setTargetAtTime(900+(state.cheer||0)*1400,AC.currentTime,0.15);
   }
   const grav=racing&&player.slip>0.2?Math.min(1,v/200)*player.slip:0;
   gr.g.gain.setTargetAtTime(grav*0.3,AC.currentTime,0.05);
@@ -2797,7 +2887,7 @@ if(touchMode&&typeof document.body!=="undefined"&&document.body){
 /* ---------------- boot ---------------- */
 buildTrack(false);
 renderGarage();
-(function(){const b=document.getElementById("buildtag");if(b)b.textContent="engine ready · v26";})();
+(function(){const b=document.getElementById("buildtag");if(b)b.textContent="engine ready · v27";})();
 let last=performance.now();
 let frameErrs=0;
 function loop(now){
