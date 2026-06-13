@@ -46,8 +46,10 @@
   #callout .pin{font-style:normal;color:rgba(240,200,96,.7);margin-right:7px}
   #callout .sub{display:block;font-size:10px;font-weight:600;font-style:normal;letter-spacing:.18em;
     color:rgba(233,237,244,.55);text-align:center;margin-top:2px}
-  #msg{position:absolute;left:50%;top:30%;transform:translate(-50%,-50%);z-index:15;font-size:64px;
-    font-weight:800;font-style:italic;text-shadow:0 4px 30px rgba(0,0,0,.8);opacity:0;transition:opacity .25s;pointer-events:none}
+  #msg{position:absolute;left:50%;top:30%;transform:translate(-50%,-50%);z-index:15;
+    font-size:clamp(34px,7vw,64px);font-weight:800;font-style:italic;letter-spacing:.01em;
+    text-shadow:0 4px 30px rgba(0,0,0,.8);opacity:0;transition:opacity .25s;pointer-events:none;
+    width:92%;text-align:center;white-space:nowrap;line-height:1}
   #lights{position:absolute;left:50%;top:18%;transform:translateX(-50%);z-index:15;display:none;gap:14px;
     background:rgba(8,10,14,.85);padding:14px 20px;border-radius:10px;border:1px solid rgba(255,255,255,.1)}
   #lights .l{width:30px;height:30px;border-radius:50%;background:#23161a;border:2px solid #3a2228;transition:all .1s}
@@ -191,7 +193,7 @@
 <div class="tc" id="tc-boost">&#9889;</div>
 <div id="kbd-legend">
   <b>V</b> view &nbsp; <b>P</b> pit &nbsp; <b>R</b> mirrors &nbsp; <b>N</b> music &nbsp; <b>M</b> mute
-  &nbsp;<span style="opacity:.5">·</span>&nbsp; <span class="vtag">v28</span>
+  &nbsp;<span style="opacity:.5">·</span>&nbsp; <span class="vtag">v29</span>
 </div>
 <div id="tc-strip">
   <div class="tcbtn" id="tc-view"><span class="ic">◱</span><span class="lb">VIEW</span></div>
@@ -1127,7 +1129,7 @@ function update(dt){
     if(lit>(state.lastLit||0)&&state.countdown>0.4)sfx.beep();state.lastLit=lit;
     document.querySelectorAll("#lights .l").forEach((el,i)=>el.classList.toggle("on",i<lit&&state.countdown>0.4));
     if(state.countdown<=0.4&&state.countdown>0)document.querySelectorAll("#lights .l").forEach(el=>el.classList.remove("on"));
-    if(state.countdown<=0){state.started=true;document.getElementById("lights").style.display="none";flash("GO!");sfx.go();
+    if(state.countdown<=0){state.started=true;document.getElementById("lights").style.display="none";flash("LIGHTS OUT, GO!");sfx.go();
       for(const c of cars)c.lapStart=0;}
   } else state.raceT+=dt;
   for(const c of cars)stepCar(c,dt);
@@ -2859,7 +2861,7 @@ if(touchMode&&typeof document.body!=="undefined"&&document.body){
 /* ---------------- boot ---------------- */
 buildTrack(false);
 renderGarage();
-(function(){const b=document.getElementById("buildtag");if(b)b.textContent="engine ready · v28";})();
+(function(){const b=document.getElementById("buildtag");if(b)b.textContent="engine ready · v29";})();
 let last=performance.now();
 let frameErrs=0;
 function loop(now){
