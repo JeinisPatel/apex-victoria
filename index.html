@@ -209,7 +209,7 @@
 <div class="tc" id="tc-boost">&#9889;</div>
 <div id="kbd-legend">
   <b>V</b> view &nbsp; <b>P</b> pit &nbsp; <b>R</b> mirrors &nbsp; <b>N</b> music &nbsp; <b>M</b> mute
-  &nbsp;<span style="opacity:.5">·</span>&nbsp; <span class="vtag">v38</span>
+  &nbsp;<span style="opacity:.5">·</span>&nbsp; <span class="vtag">v39</span>
 </div>
 <div id="tc-strip">
   <div class="tcbtn" id="tc-view"><span class="ic">◱</span><span class="lb">VIEW</span></div>
@@ -1404,13 +1404,14 @@ const LAND_HARBOUR=[
 ];
 /* ---- The Gorge world: its own landmarks, evoking the waterway's real character ---- */
 const LAND_GORGE=[
-  {x:1772,y:600,t:"trestle", label:"Selkirk Trestle"},      /* the black wooden rail trestle over the water */
-  {x:2022,y:701, t:"pavilion",label:"Gorge Park Pavilion"},  /* Esquimalt Gorge Park + Japanese garden */
+  {x:1652,y:600,t:"trestle", label:"Bay Street Bridge"},      /* steel truss bascule bridge over the waterway */
+  {x:2088,y:497, t:"pavilion",label:"Gorge Park Pavilion"},  /* Esquimalt Gorge Park + Japanese garden */
   {x:1001,y:1298,t:"golf",   label:"Gorge Vale Golf Club"},
   {x:2240,y:1500,t:"trail",  label:"Galloping Goose Trail"}, /* the cycling/walking trail marker */
   {x:880, y:900, t:"heritage",label:"Point Ellice House"},   /* heritage house + gardens by the water */
   {x:1647,y:1989,t:"tilli",  label:"Tillicum Narrows"},      /* the reversing falls under the bridge */
   {x:700, y:1180,t:"school", label:"Craigflower Schoolhouse"},
+  {x:421, y:1457,t:"vircc",  label:"VIRCC"},   /* the historic red-brick remand centre */
   {x:1602,y:1363,t:"boathouse",label:"Rowing Club"},
   {x:2180,y:820, t:"torii",  label:""},                      /* Takata Japanese garden */
   {x:692, y:1567,t:"oak",    label:"",ph:0.0},
@@ -1701,18 +1702,34 @@ function drawLandTop(l,camX,camY){
       cx.restore();
       break;}
     case "trestle":{
-      /* Selkirk Trestle: black wooden rail trestle striding across the water */
-      const len=95;
-      cx.fillStyle=isNight?"#1a1712":"#2a2018";
-      cx.fillRect(-len,-7,len*2,14);                              /* the deck */
-      cx.fillStyle=isNight?"#0f0d0a":"#1a130d";
-      for(let bx=-len;bx<=len;bx+=20){                            /* trestle bents (legs) */
-        cx.fillRect(bx-2,-7,4,38);cx.fillRect(bx-9,24,18,3);
-        cx.beginPath();cx.moveTo(bx-9,30);cx.lineTo(bx,8);cx.lineTo(bx+9,30);cx.closePath();
-      }
-      cx.fillStyle=isNight?"#000":"#15100a";                      /* deck planks */
-      for(let bx=-len;bx<len;bx+=7)cx.fillRect(bx,-7,1,14);
-      cx.fillStyle="#6a5238";cx.fillRect(-len,-9,len*2,2);        /* hand rail */
+      /* Bay Street Bridge: steel Warren-truss span with a raised bascule lift + counterweight */
+      const len=95, steel=isNight?"#5a6470":"#9aa6b4", steelD=isNight?"#3e4650":"#6e7a88";
+      /* concrete piers in the water */
+      cx.fillStyle=isNight?"#3a3833":"#7a736a";
+      for(const px of [-len+6,-10,len-26])cx.fillRect(px,8,16,26);
+      /* deck */
+      cx.fillStyle=isNight?"#2a2c30":"#54585e";cx.fillRect(-len,-2,len*2,9);
+      /* fixed truss span (left ~2/3): top & bottom chords + zigzag web */
+      const ty=-30, by=-2, x0=-len, x1=len*0.45;
+      cx.strokeStyle=steel;cx.lineWidth=3;
+      cx.beginPath();cx.moveTo(x0,ty);cx.lineTo(x1,ty);cx.moveTo(x0,by);cx.lineTo(x1,by);cx.stroke(); /* chords */
+      cx.fillStyle=steel;cx.fillRect(x0,ty-2,4,by-ty+2);cx.fillRect(x1-4,ty-2,4,by-ty+2);            /* end posts */
+      cx.strokeStyle=steelD;cx.lineWidth=2;                                                          /* zigzag web */
+      let up=true;
+      for(let wx=x0;wx<x1-14;wx+=14){cx.beginPath();cx.moveTo(wx,up?by:ty);cx.lineTo(wx+14,up?ty:by);cx.stroke();up=!up;}
+      cx.strokeStyle=steel;cx.lineWidth=1.5;                                                         /* verticals */
+      for(let wx=x0;wx<=x1;wx+=14){cx.beginPath();cx.moveTo(wx,ty);cx.lineTo(wx,by);cx.stroke();}
+      /* the bascule lift leaf, raised at an angle, with a chunky counterweight */
+      cx.save();cx.translate(x1,by);cx.rotate(-0.5);
+      cx.strokeStyle=steel;cx.lineWidth=3;
+      cx.beginPath();cx.moveTo(0,0);cx.lineTo(len*0.5,0);cx.moveTo(0,-26);cx.lineTo(len*0.5,-20);cx.stroke();
+      cx.strokeStyle=steelD;cx.lineWidth=2;up=true;
+      for(let wx=0;wx<len*0.5-12;wx+=12){cx.beginPath();cx.moveTo(wx,up?0:-26+wx*0.12);cx.lineTo(wx+12,up?-26+wx*0.12:0);cx.stroke();up=!up;}
+      cx.restore();
+      cx.fillStyle=steelD;cx.fillRect(x1-6,-40,18,16);                                               /* counterweight box */
+      /* tower/control house at the lift pier */
+      cx.fillStyle=isNight?"#3a4048":"#6a7280";cx.fillRect(x1-4,-46,8,16);
+      if(isNight){cx.fillStyle="rgba(255,210,120,.6)";cx.fillRect(x1-2,-44,4,5);}
       break;}
     case "pavilion":{
       /* Gorge Park Pavilion: tiered green pagoda with a wrap verandah + a red koi-pond bridge */
@@ -1822,6 +1839,35 @@ function drawLandTop(l,camX,camY){
       cx.strokeStyle=isNight?"#4a4840":"#a59478";cx.lineWidth=1.4;
       for(let px=-42;px<=42;px+=10){cx.beginPath();cx.moveTo(px,-9);cx.lineTo(px,-12);cx.stroke();}
       cx.fillStyle=isNight?"#2a2620":"#6a5a48";cx.fillRect(-48,-12,9,24);cx.fillRect(39,-12,9,24); /* stone piers */
+      break;}
+    case "vircc":{
+      /* VIRCC: historic red-brick remand centre with castellated towers + arched entrance */
+      cx.fillStyle="rgba(0,0,0,.2)";cx.beginPath();cx.ellipse(3,6,48,30,0,0,7);cx.fill();
+      /* main brick block */
+      const brick=isNight?"#4a2c24":"#9a4a36", brickD=isNight?"#3a221c":"#7a3a2a";
+      cx.fillStyle=brick;cx.fillRect(-44,-20,88,42);
+      cx.fillStyle=brickD;cx.fillRect(34,-20,10,42);                       /* shaded wing */
+      /* white-trimmed window rows */
+      cx.fillStyle=isNight?"#caa84a":"#e8e2d0";
+      for(let r=0;r<3;r++)for(let i=0;i<9;i++){const wx=-40+i*9.5;if(Math.abs(wx)<7&&r>0)continue;cx.fillRect(wx,-16+r*13,4,8);}
+      /* central projecting entrance bay with arched doorway */
+      cx.fillStyle=brickD;cx.fillRect(-10,-24,20,46);
+      cx.fillStyle=isNight?"#2a1a14":"#5a2a1e";cx.fillRect(-5,10,10,12);
+      cx.beginPath();cx.arc(0,10,5,Math.PI,0);cx.fill();
+      /* castellated towers (crenellated tops) at the corners + centre */
+      const tcol=isNight?"#5a342a":"#a55440";
+      for(const tx of [-44,-12,8,40]){
+        cx.fillStyle=tcol;cx.fillRect(tx-2,-30,16,12);
+        cx.fillStyle=brick;for(let c=0;c<3;c++)cx.fillRect(tx-2+c*6,-34,4,5);   /* crenellations */
+      }
+      /* the taller central tower */
+      cx.fillStyle=tcol;cx.fillRect(-8,-40,16,16);
+      cx.fillStyle=brick;for(let c=0;c<3;c++)cx.fillRect(-8+c*6,-44,4,5);
+      /* stone foundation band + flag */
+      cx.fillStyle=isNight?"#3a3833":"#8a8276";cx.fillRect(-44,18,88,5);
+      cx.fillStyle="#9a9488";cx.fillRect(-1,-52,1.5,12);
+      cx.fillStyle="#d83a3a";cx.fillRect(0.5,-52,7,4);cx.fillStyle="#fff";cx.fillRect(2.5,-52,3,4);  /* canadian flag */
+      if(isNight){cx.fillStyle="rgba(255,210,120,.4)";cx.fillRect(-5,10,10,8);}
       break;}
     case "school":{
       /* Craigflower Schoolhouse: white colonial two-storey with a bell cupola */
@@ -2338,13 +2384,32 @@ function drawLandSprite(l,p,f){
       cx.fillStyle="#8a8578";cx.fillRect(x-w*0.42,yy+w*0.16,w*0.12,w*0.14);cx.fillRect(x+w*0.06,yy+w*0.16,w*0.12,w*0.14);
       break;}
     case "trestle":{
-      /* black trestle receding across the water */
-      const w=120*sc;
-      cx.fillStyle=isNight?"#15120d":"#2a2018";
-      cx.fillRect(x-w*0.6,y-w*0.07,w*1.2,w*0.14);
-      cx.fillStyle=isNight?"#0a0805":"#181009";
-      for(let i=-6;i<=6;i++){const bx=x+i*w*0.1;cx.fillRect(bx-w*0.012,y-w*0.05,w*0.024,w*0.42);}
-      cx.fillStyle="#6a5238";cx.fillRect(x-w*0.6,y-w*0.09,w*1.2,w*0.03);
+      /* Bay Street Bridge: steel Warren-truss with a raised bascule + counterweight */
+      const w=120*sc, steel=isNight?"#5a6470":"#9aa6b4", steelD=isNight?"#3e4650":"#6e7a88";
+      const x0=x-w*0.6, x1=x+w*0.18, ty=y-w*0.34, by=y-w*0.04;
+      /* concrete piers */
+      cx.fillStyle=isNight?"#3a3833":"#7a736a";
+      for(const px of [x0+w*0.04,x-w*0.12,x1-w*0.04])cx.fillRect(px,y-w*0.02,w*0.07,w*0.34);
+      /* deck */
+      cx.fillStyle=isNight?"#2a2c30":"#54585e";cx.fillRect(x0,y-w*0.06,(x1-x0)+w*0.04,w*0.07);
+      /* truss: top & bottom chords */
+      cx.strokeStyle=steel;cx.lineWidth=w*0.022;
+      cx.beginPath();cx.moveTo(x0,ty);cx.lineTo(x1,ty);cx.moveTo(x0,by);cx.lineTo(x1,by);cx.stroke();
+      /* zigzag web + verticals */
+      cx.strokeStyle=steelD;cx.lineWidth=w*0.014;let up=true;
+      for(let wx=x0;wx<x1-w*0.1;wx+=w*0.1){cx.beginPath();cx.moveTo(wx,up?by:ty);cx.lineTo(wx+w*0.1,up?ty:by);cx.stroke();up=!up;}
+      cx.strokeStyle=steel;cx.lineWidth=w*0.012;
+      for(let wx=x0;wx<=x1;wx+=w*0.1){cx.beginPath();cx.moveTo(wx,ty);cx.lineTo(wx,by);cx.stroke();}
+      /* raised bascule leaf + counterweight + control tower at the right pier */
+      cx.save();cx.translate(x1,by);cx.rotate(-0.5);
+      cx.strokeStyle=steel;cx.lineWidth=w*0.022;
+      cx.beginPath();cx.moveTo(0,0);cx.lineTo(w*0.42,0);cx.moveTo(0,-w*0.3);cx.lineTo(w*0.42,-w*0.22);cx.stroke();
+      cx.strokeStyle=steelD;cx.lineWidth=w*0.014;up=true;
+      for(let wx=0;wx<w*0.42-w*0.1;wx+=w*0.1){cx.beginPath();cx.moveTo(wx,up?0:-w*0.3+wx*0.12);cx.lineTo(wx+w*0.1,up?-w*0.3+wx*0.12:0);cx.stroke();up=!up;}
+      cx.restore();
+      cx.fillStyle=steelD;cx.fillRect(x1-w*0.06,ty-w*0.12,w*0.16,w*0.14);          /* counterweight */
+      cx.fillStyle=isNight?"#3a4048":"#6a7280";cx.fillRect(x1-w*0.03,ty-w*0.18,w*0.08,w*0.16); /* control tower */
+      if(isNight){cx.fillStyle="rgba(255,210,120,.6)";cx.fillRect(x1-w*0.01,ty-w*0.14,w*0.04,w*0.05);}
       break;}
     case "pavilion":{
       const w=82*sc;
@@ -2387,6 +2452,28 @@ function drawLandSprite(l,p,f){
       cx.fillStyle=isNight?"#3a3833":"#8a7a5c";cx.fillRect(x-w*0.5,y-w*0.08,w,w*0.06);
       cx.fillStyle=isNight?"#4a4840":"#a59478";cx.fillRect(x-w*0.5,y-w*0.11,w,w*0.02);
       cx.fillStyle=isNight?"#2a2620":"#6a5a48";cx.fillRect(x-w*0.54,y-w*0.11,w*0.08,w*0.22);cx.fillRect(x+w*0.46,y-w*0.11,w*0.08,w*0.22);
+      break;}
+    case "vircc":{
+      const w=96*sc, brick=isNight?"#4a2c24":"#9a4a36", brickD=isNight?"#3a221c":"#7a3a2a";
+      cx.fillStyle=brick;cx.fillRect(x-w*0.42,y-w*0.2,w*0.84,w*0.42);
+      cx.fillStyle=brickD;cx.fillRect(x+w*0.32,y-w*0.2,w*0.1,w*0.42);
+      /* window rows */
+      cx.fillStyle=isNight?"#caa84a":"#e8e2d0";
+      for(let r=0;r<3;r++)for(let i=0;i<8;i++){const wx=x-w*0.38+i*w*0.1;if(Math.abs(wx-x)<w*0.05&&r>0)continue;cx.fillRect(wx,y-w*0.15+r*w*0.12,w*0.04,w*0.08);}
+      /* central entrance bay + arch */
+      cx.fillStyle=brickD;cx.fillRect(x-w*0.1,y-w*0.24,w*0.2,w*0.46);
+      cx.fillStyle=isNight?"#2a1a14":"#5a2a1e";cx.fillRect(x-w*0.05,y+w*0.08,w*0.1,w*0.14);
+      cx.beginPath();cx.arc(x,y+w*0.08,w*0.05,Math.PI,0);cx.fill();
+      /* castellated towers */
+      const tcol=isNight?"#5a342a":"#a55440";
+      for(const tx of [-0.42,-0.12,0.08,0.4]){cx.fillStyle=tcol;cx.fillRect(x+tx*w-w*0.02,y-w*0.3,w*0.16,w*0.12);
+        cx.fillStyle=brick;for(let c=0;c<3;c++)cx.fillRect(x+tx*w-w*0.02+c*w*0.06,y-w*0.34,w*0.04,w*0.05);}
+      cx.fillStyle=tcol;cx.fillRect(x-w*0.08,y-w*0.4,w*0.16,w*0.16);
+      cx.fillStyle=brick;for(let c=0;c<3;c++)cx.fillRect(x-w*0.08+c*w*0.06,y-w*0.44,w*0.04,w*0.05);
+      /* flag + foundation */
+      cx.fillStyle=isNight?"#3a3833":"#8a8276";cx.fillRect(x-w*0.42,y+w*0.18,w*0.84,w*0.05);
+      cx.fillStyle="#d83a3a";cx.fillRect(x+w*0.005,y-w*0.52,w*0.07,w*0.04);cx.fillStyle="#fff";cx.fillRect(x+w*0.03,y-w*0.52,w*0.03,w*0.04);
+      if(isNight){cx.fillStyle="rgba(255,210,120,.4)";cx.fillRect(x-w*0.05,y+w*0.08,w*0.1,w*0.1);}
       break;}
     case "school":{
       const w=84*sc;
@@ -3501,7 +3588,7 @@ function endTitle(){
 buildTrack(false);
 renderGarage();
 startTitle();
-(function(){const b=document.getElementById("buildtag");if(b)b.textContent="engine ready · v38";})();
+(function(){const b=document.getElementById("buildtag");if(b)b.textContent="engine ready · v39";})();
 let last=performance.now();
 let frameErrs=0;
 function loop(now){
