@@ -209,7 +209,7 @@
 <div class="tc" id="tc-boost">&#9889;</div>
 <div id="kbd-legend">
   <b>V</b> view &nbsp; <b>P</b> pit &nbsp; <b>R</b> mirrors &nbsp; <b>N</b> music &nbsp; <b>M</b> mute
-  &nbsp;<span style="opacity:.5">·</span>&nbsp; <span class="vtag">v36</span>
+  &nbsp;<span style="opacity:.5">·</span>&nbsp; <span class="vtag">v37</span>
 </div>
 <div id="tc-strip">
   <div class="tcbtn" id="tc-view"><span class="ic">◱</span><span class="lb">VIEW</span></div>
@@ -386,9 +386,9 @@ function title(){return TITLES[Math.min(TITLES.length-1,meta.lvl-1)];}
 const EVENTS=[
   {name:"Inner Harbour Sprint",laps:3,rev:false,night:false,tod:"day",ai:[0.82,0.93],mult:1.0,wx:"dry",
    desc:"A short, scrappy opener along Belleville Street. The grid is green and so are you."},
-  {name:"Victoria Grand Prix",laps:6,rev:false,night:false,tod:"day",ai:[0.87,0.98],mult:1.2,wx:"damp",
+  {name:"Victoria Grand Prix",laps:6,rev:false,night:false,tod:"dusk",ai:[0.87,0.98],mult:1.2,wx:"damp",
    desc:"The full tour of the capital — Legislature to Chinatown to Mile 0. Brake markers matter now."},
-  {name:"Mirror Harbour",laps:6,rev:true,night:false,tod:"dusk",ai:[0.90,1.01],mult:1.4,wx:"dry",
+  {name:"Mirror Harbour",laps:6,rev:true,night:true,tod:"night",ai:[0.90,1.01],mult:1.4,wx:"dry",
    desc:"The streets of Victoria run backwards. Every braking point you learned is now a trap."},
   {name:"Island Endurance",laps:8,rev:false,night:false,tod:"dusk",ai:[0.93,1.04],mult:1.7,wx:"dry",
    desc:"Five laps of the capital. Consistency beats heroics — the gravel at Beacon Hill costs podiums."},
@@ -1404,14 +1404,14 @@ const LAND_HARBOUR=[
 ];
 /* ---- The Gorge world: its own landmarks, evoking the waterway's real character ---- */
 const LAND_GORGE=[
-  {x:1799,y:989,t:"trestle", label:"Selkirk Trestle"},      /* the black wooden rail trestle over the water */
+  {x:1772,y:600,t:"trestle", label:"Selkirk Trestle"},      /* the black wooden rail trestle over the water */
   {x:2022,y:701, t:"pavilion",label:"Gorge Park Pavilion"},  /* Esquimalt Gorge Park + Japanese garden */
-  {x:1100,y:1700,t:"golf",   label:"Gorge Vale Golf Club"},
+  {x:1001,y:1298,t:"golf",   label:"Gorge Vale Golf Club"},
   {x:2240,y:1500,t:"trail",  label:"Galloping Goose Trail"}, /* the cycling/walking trail marker */
   {x:880, y:900, t:"heritage",label:"Point Ellice House"},   /* heritage house + gardens by the water */
-  {x:2120,y:2180,t:"tilli",  label:"Tillicum Narrows"},      /* the reversing falls under the bridge */
+  {x:1647,y:1989,t:"tilli",  label:"Tillicum Narrows"},      /* the reversing falls under the bridge */
   {x:700, y:1180,t:"school", label:"Craigflower Schoolhouse"},
-  {x:1792,y:1603,t:"boathouse",label:"Rowing Club"},
+  {x:1602,y:1363,t:"boathouse",label:"Rowing Club"},
   {x:2180,y:820, t:"torii",  label:""},                      /* Takata Japanese garden */
   {x:692, y:1567,t:"oak",    label:"",ph:0.0},
   {x:2325,y:1915,t:"oak",    label:"",ph:1.0},
@@ -2820,7 +2820,22 @@ function drawCockpit(){
     sprites.push({land:l,p});
   }
   sprites.sort((a,b)=>b.p.z-a.p.z);
-  for(const s of sprites){if(s.land)drawLandSprite(s.land,s.p,f);else drawCarSprite(s.c,s.p,f);}
+  /* atmospheric colour of the haze (matches the sky band by time of day) */
+  const hazeRGB = isNight ? "10,16,32" : (state.fog?"200,206,214":(state.glare?"230,196,150":"176,198,224"));
+  for(const s of sprites){
+    if(s.land){
+      drawLandSprite(s.land,s.p,f);
+      /* depth fog: distant landmarks fade into the haze so they sit back from the road */
+      const z=s.p.z;
+      const fogStart=isNight?420:520, fogFull=isNight?1500:2400;
+      const fog=Math.max(0,Math.min(0.82,(z-fogStart)/(fogFull-fogStart)));
+      if(fog>0.02 && s.land.t!=="flyby"){
+        const sc=f/z, hw=190*sc, hh=190*sc;
+        cx.fillStyle="rgba("+hazeRGB+","+fog.toFixed(3)+")";
+        cx.fillRect(s.p.x-hw, s.p.y-hh*1.7, hw*2, hh*2.2);
+      }
+    } else drawCarSprite(s.c,s.p,f);
+  }
   /* night: headlight wash on the road ahead */
   if(isNight){
     const hl=cx.createRadialGradient(VW/2,VH*0.86,30,VW/2,VH*0.6,VH*0.75);
@@ -3489,7 +3504,7 @@ function endTitle(){
 buildTrack(false);
 renderGarage();
 startTitle();
-(function(){const b=document.getElementById("buildtag");if(b)b.textContent="engine ready · v36 · Formula car";})();
+(function(){const b=document.getElementById("buildtag");if(b)b.textContent="engine ready · v37";})();
 let last=performance.now();
 let frameErrs=0;
 function loop(now){
