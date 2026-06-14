@@ -157,6 +157,7 @@
   #tutorial b{color:var(--teal)}
   body.touch #kbd-legend{display:none}        /* touch gets buttons, not the legend */
   body.touch #tc-strip{display:flex !important}
+  #replay-bar .tcbtn{display:flex !important}
   .tcbtn{width:44px;height:40px;border-radius:9px;background:rgba(16,19,27,.42);
     border:1px solid rgba(255,255,255,.14);color:rgba(233,237,244,.82);
     display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
@@ -208,7 +209,7 @@
 <div class="tc" id="tc-boost">&#9889;</div>
 <div id="kbd-legend">
   <b>V</b> view &nbsp; <b>P</b> pit &nbsp; <b>R</b> mirrors &nbsp; <b>N</b> music &nbsp; <b>M</b> mute
-  &nbsp;<span style="opacity:.5">·</span>&nbsp; <span class="vtag">v30</span>
+  &nbsp;<span style="opacity:.5">·</span>&nbsp; <span class="vtag">v31</span>
 </div>
 <div id="tc-strip">
   <div class="tcbtn" id="tc-view"><span class="ic">◱</span><span class="lb">VIEW</span></div>
@@ -216,6 +217,7 @@
   <div class="tcbtn" id="tc-mirror"><span class="ic">▭</span><span class="lb">MIRR</span></div>
   <div class="tcbtn" id="tc-music"><span class="ic">♪</span><span class="lb">MUS</span></div>
   <div class="tcbtn" id="tc-mute"><span class="ic">♩</span><span class="lb">SND</span></div>
+  <div class="tcbtn" id="tc-replay"><span class="ic">◉</span><span class="lb">REPLAY</span></div>
 </div>
 <div id="yellow-flag" style="display:none;position:absolute;left:0;top:0;width:100%;z-index:13;
   text-align:center;font-size:13px;font-weight:800;letter-spacing:.18em;color:#1a1400;
@@ -236,6 +238,13 @@
 </div>
 
 <!-- GARAGE / PADDOCK -->
+<div id="replay-bar" style="display:none;position:absolute;left:50%;bottom:13%;transform:translateX(-50%);z-index:30;gap:10px;align-items:center">
+  <div class="tcbtn" id="rp-back" style="display:flex"><span class="ic">◀</span></div>
+  <div class="tcbtn" id="rp-play" style="display:flex"><span class="ic">⏸</span></div>
+  <div class="tcbtn" id="rp-fwd" style="display:flex"><span class="ic">▶</span></div>
+  <div class="tcbtn" id="rp-photo" style="display:flex"><span class="ic">□</span><span class="lb">PHOTO</span></div>
+  <div class="tcbtn" id="rp-exit" style="display:flex;border-color:rgba(232,68,58,.5);color:#ef8a7e"><span class="ic">✕</span></div>
+</div>
 <div id="title-screen">
   <canvas id="title-cv"></canvas>
   <div id="title-inner">
@@ -410,6 +419,9 @@ const CTRL=[
 ];
 const ROAD_W=150;
 let line=[],N=0,curv=null,TRACK_LEN=0,isNight=false,dryLine=null;
+let replayBuf=[];      /* rolling buffer of frames: [{cars:[{x,y,a,team,isPlayer,damage,dnf}],wx,rain,tod}] */
+const REPLAY_SECS=8, REPLAY_HZ=20;          /* keep ~8s at 20fps = 160 frames */
+let replayAccum=0;
 let skids=[];          /* persistent tyre marks: {x,y,a,age,heavy} */
 let sparks=[];         /* short-lived sparks: {x,y,vx,vy,life} */
 let dust=[];           /* short-lived dust/grass puffs: {x,y,vx,vy,life,grass} */
@@ -556,6 +568,14 @@ addEventListener("keydown",e=>{keys[e.key.toLowerCase()]=true;
   if(["arrowup","arrowdown","arrowleft","arrowright"," "].includes(e.key.toLowerCase()))e.preventDefault();
   if(e.key==="Shift")tryBoost();
   if(e.key.toLowerCase()==="v")state.view=state.view==="cockpit"?"top":"cockpit";
+  if(e.key.toLowerCase()==="k"&&state.running&&replayBuf.length>10)openReplay();
+  if(state.replay){
+    if(e.key===" "){state.replayPlaying=!state.replayPlaying;e.preventDefault&&e.preventDefault();}
+    if(e.key==="ArrowLeft"){state.replayPlaying=false;state.replayIdx=Math.max(0,state.replayIdx-3);}
+    if(e.key==="ArrowRight"){state.replayPlaying=false;state.replayIdx=Math.min(replayBuf.length-1,state.replayIdx+3);}
+    if(e.key.toLowerCase()==="p")state.photo=!state.photo;        /* hide UI for a clean photo */
+    if(e.key==="Escape"||e.key.toLowerCase()==="k")closeReplay();
+  }
   if(e.key==="Escape"&&state.running&&state.started&&!state.over)togglePause();
   if(e.key.toLowerCase()==="m"){muted=!muted;flash(muted?"MUTED":"SOUND ON");}
   if(e.key.toLowerCase()==="n"){
@@ -575,7 +595,8 @@ function tryBoost(){
 }
 const state={running:false,started:false,t:0,raceT:0,countdown:0,over:false,msgT:0,view:"cockpit",mirrors:true,wx:"dry",rain:0,paused:false,mode:"career",tut:0,tutStep:0,gear:0,rpm:0,fog:0,glare:0,
   camAccel:0,camFov:0,camPitch:0,camKerb:0,prevV:0,prevYaw:0,
-  yellowT:0,yellowAt:0,tod:0,passCool:0};
+  yellowT:0,yellowAt:0,tod:0,passCool:0,
+  replay:false,replayIdx:0,replayPlaying:true,replayCamRot:0,replayZoom:0.9,photo:false};
 let tutorialDone=false;
 
 function offTrackDist(c){const p=lp(c.idx);return Math.hypot(c.x-p.x,c.y-p.y);}
@@ -880,7 +901,7 @@ function startRace(){
     state.glare = state.wx==="glare"?1:0;
   }
   buildTrack(ev.rev);
-  skids=[];sparks=[];dust=[];
+  skids=[];sparks=[];dust=[];replayBuf=[];replayAccum=0;
   dryLine=new Float32Array(N);   /* 0 = wet, 1 = swept dry; starts wet in the wet */
   if(state.wx==="dry"&&!state.dynamic)dryLine.fill(1);
   else if(state.dynamic)dryLine.fill(1);   /* dynamic starts dry */
@@ -931,6 +952,16 @@ function doStartTT(e){
   const tt=document.getElementById("ttbtn");
   if(tt){tt.onclick=doStartTT;if(tt.addEventListener)tt.addEventListener("touchend",doStartTT,{passive:false});}
 })();
+function openReplay(){
+  if(replayBuf.length<2)return;
+  state.replay=true; state.replayIdx=0; state.replayPlaying=true; state.photo=false;
+  state.replayCamRot=0; state.replayZoom=0.9; state.paused=true;   /* freeze the sim under it */
+  const rv=document.getElementById("replay-bar"); if(rv)rv.style.display="flex";
+}
+function closeReplay(){
+  state.replay=false; state.paused=false; state.photo=false;
+  const rv=document.getElementById("replay-bar"); if(rv)rv.style.display="none";
+}
 function togglePause(){
   state.paused=!state.paused;
   const v=document.getElementById("pause-veil");if(v)v.style.display=state.paused?"flex":"none";
@@ -1182,6 +1213,19 @@ function update(dt){
   for(const d of dust){d.x+=d.vx*dt;d.y+=d.vy*dt;d.vx*=0.94;d.vy*=0.94;d.life-=dt;}
   dust=dust.filter(d=>d.life>0);
   if(state.yellowT>0)state.yellowT-=dt;
+  /* roll the replay buffer at a fixed rate */
+  if(state.started&&!state.over){
+    replayAccum+=dt;
+    if(replayAccum>=1/REPLAY_HZ){
+      replayAccum=0;
+      replayBuf.push({
+        cars:cars.map(c=>({x:c.x,y:c.y,a:c.a,team:c.team,isPlayer:c.isPlayer,
+          damage:c.damage,dnf:c.dnf,braking:c.braking,v:c.v})),
+        wx:state.wx,rain:state.rain,tod:state.tod,isNight:isNight
+      });
+      if(replayBuf.length>REPLAY_SECS*REPLAY_HZ)replayBuf.shift();
+    }
+  }
   /* dusk falling: ease tod toward night across the race, flip isNight past the midpoint */
   if(state.todMode==="dusk"&&state.started&&!state.over){
     const prog=Math.min(1, (player?player.lap:1)/Math.max(1,LAPS));
@@ -2657,7 +2701,61 @@ function drawMini(){
   }
   cx.restore();
 }
+function drawReplay(){
+  const fr=replayBuf[Math.max(0,Math.min(replayBuf.length-1,Math.floor(state.replayIdx)))];
+  if(!fr){cx.fillStyle="#0a0c10";cx.fillRect(0,0,VW,VH);return;}
+  const wasNight=isNight; isNight=fr.isNight;
+  /* focus on the player car, with a slow orbit + gentle zoom breathing */
+  const pc=fr.cars.find(c=>c.isPlayer)||fr.cars[0];
+  const zoom=state.replayZoom*(1+Math.sin(state.replayCamRot*0.5)*0.06);
+  const rot=Math.sin(state.replayCamRot*0.4)*0.3;
+  /* sky/ground */
+  cx.fillStyle=isNight?"#0d160a":"#1d3318";cx.fillRect(0,0,VW,VH);
+  cx.save();
+  cx.translate(VW/2,VH/2);cx.rotate(rot);cx.scale(zoom,zoom);cx.translate(-pc.x,-pc.y);
+  /* baked track */
+  cx.drawImage(trackCv,0,0,trackCv.width,trackCv.height,0,0,trackCv.width/BAKE_S,trackCv.height/BAKE_S);
+  /* skid marks (still present in their buffer) */
+  for(const s of skids){const fade=(1-s.age/14)*(s.heavy?0.5:0.32);
+    cx.strokeStyle="rgba(20,20,24,"+fade+")";cx.lineWidth=s.heavy?4:2.6;
+    cx.beginPath();cx.moveTo(s.x-Math.cos(s.a)*5,s.y-Math.sin(s.a)*5);cx.lineTo(s.x+Math.cos(s.a)*5,s.y+Math.sin(s.a)*5);cx.stroke();}
+  /* landmarks via the existing top renderer (camera already applied -> pass 0,0) */
+  const save=globalThis.cx; try{drawLandmarksTop(0,0);}catch(e){} globalThis.cx=save;
+  /* the cars at this frozen frame */
+  const order=[...fr.cars].sort((a,b)=>a.y-b.y);
+  for(const c of order){
+    cx.save();cx.translate(c.x,c.y);cx.rotate(c.a);
+    cx.fillStyle=c.team?c.team.c:"#39d2c0";
+    cx.beginPath();cx.ellipse(0,0,15,7.5,0,0,7);cx.fill();
+    cx.fillStyle=c.team&&c.team.c2?c.team.c2:"#0e5a52";cx.fillRect(-17,-8.5,3.2,17);cx.fillRect(14,-9.5,3.2,19);
+    cx.fillStyle="#10131a";cx.beginPath();cx.arc(3,0,3.2,0,7);cx.fill();
+    if(c.braking>0.05){cx.fillStyle="#ff2a18";cx.fillRect(-16.5,-3,2.4,6);}
+    if(c.dnf){cx.fillStyle="rgba(40,40,44,.5)";cx.beginPath();cx.arc(-8,0,12,0,7);cx.fill();}
+    cx.restore();
+    if(c.isPlayer){cx.save();cx.strokeStyle="rgba(57,210,192,.9)";cx.lineWidth=2;
+      cx.beginPath();cx.arc(c.x,c.y,22,0,7);cx.stroke();cx.restore();}
+  }
+  cx.restore();
+  /* cinematic letterbox bars + vignette */
+  cx.fillStyle="#000";cx.fillRect(0,0,VW,VH*0.09);cx.fillRect(0,VH*0.91,VW,VH*0.09);
+  const vg=cx.createRadialGradient(VW/2,VH/2,VH*0.35,VW/2,VH/2,VH*0.85);
+  vg.addColorStop(0,"rgba(0,0,0,0)");vg.addColorStop(1,"rgba(0,0,0,.5)");
+  cx.fillStyle=vg;cx.fillRect(0,0,VW,VH);
+  isNight=wasNight;
+  /* "REPLAY" tag + scrub position (hidden in photo mode) */
+  if(!state.photo){
+    cx.fillStyle="rgba(255,255,255,.9)";cx.font="bold 15px sans-serif";cx.textAlign="left";
+    cx.fillText("◉ REPLAY",20,VH*0.09+26);
+    cx.fillStyle="rgba(255,255,255,.5)";cx.font="12px sans-serif";
+    cx.fillText(state.replayPlaying?"playing":"paused — ← → to scrub, space to play, P for photo, Esc to exit",20,VH*0.09+44);
+    /* progress bar */
+    const bw=VW*0.5, bx=VW/2-bw/2, by=VH*0.95;
+    cx.fillStyle="rgba(255,255,255,.2)";cx.fillRect(bx,by,bw,3);
+    cx.fillStyle="#39d2c0";cx.fillRect(bx,by,bw*(state.replayIdx/Math.max(1,replayBuf.length-1)),3);
+  }
+}
 function draw(){
+  if(state.replay){drawReplay();return;}
   if(!player){cx.fillStyle="#0a0c10";cx.fillRect(0,0,VW,VH);return;}
   if(state.view==="top")drawTop(); else drawCockpit();
 }
@@ -2895,6 +2993,12 @@ if(touchMode&&typeof document.body!=="undefined"&&document.body){
       else flash("MUSIC: "+TRACKS[trackIdx].n);}
     music.next=0;});
   tap("tc-mute",()=>{initAudio();muted=!muted;flash(muted?"MUTED":"SOUND ON");});
+  tap("tc-replay",()=>{if(state.running&&replayBuf.length>10)openReplay();});
+  tap("rp-back",()=>{state.replayPlaying=false;state.replayIdx=Math.max(0,state.replayIdx-3);});
+  tap("rp-fwd",()=>{state.replayPlaying=false;state.replayIdx=Math.min(replayBuf.length-1,state.replayIdx+3);});
+  tap("rp-play",()=>{state.replayPlaying=!state.replayPlaying;});
+  tap("rp-photo",()=>{state.photo=!state.photo;});
+  tap("rp-exit",()=>{closeReplay();});
   if(typeof document.addEventListener==="function")
     document.addEventListener("touchmove",e=>{if(e.target&&e.target.id==="game")e.preventDefault();},{passive:false});
 }
@@ -2971,13 +3075,18 @@ function endTitle(){
 buildTrack(false);
 renderGarage();
 startTitle();
-(function(){const b=document.getElementById("buildtag");if(b)b.textContent="engine ready · v30";})();
+(function(){const b=document.getElementById("buildtag");if(b)b.textContent="engine ready · v31";})();
 let last=performance.now();
 let frameErrs=0;
 function loop(now){
   const dt=Math.min(0.045,(now-last)/1000);last=now;
   try{
     if(state.running&&!state.paused&&!document.getElementById("rewardveil").style.display.includes("flex"))update(dt);
+    if(state.replay){
+      if(state.replayPlaying){state.replayIdx+=dt*REPLAY_HZ;
+        if(state.replayIdx>=replayBuf.length-1){state.replayIdx=replayBuf.length-1;state.replayPlaying=false;}}
+      state.replayCamRot+=dt*0.18;     /* slow cinematic orbit */
+    }
     draw();
     audioUpdate();
   }catch(err){
