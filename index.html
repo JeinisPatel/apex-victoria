@@ -122,6 +122,21 @@
     border:1px solid rgba(255,255,255,.07);pointer-events:none;display:block}
   #kbd-legend b{color:rgba(57,210,192,.85);font-weight:700;margin:0 1px}
   #kbd-legend .vtag{color:rgba(233,237,244,.35);font-weight:600}
+  #title-screen{position:absolute;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#05070d}
+  #title-cv{position:absolute;inset:0;width:100%;height:100%}
+  #title-inner{position:relative;z-index:2;text-align:center;display:flex;flex-direction:column;align-items:center;gap:16px;
+    background:radial-gradient(ellipse at center,rgba(5,7,13,.55) 0%,rgba(5,7,13,.15) 60%,transparent 100%);padding:60px}
+  .title-logo{font-size:clamp(44px,9vw,92px);font-weight:800;font-style:italic;letter-spacing:.02em;margin:0;
+    text-shadow:0 6px 40px rgba(0,0,0,.9)}
+  .title-logo em{color:#e8443a;font-style:italic}
+  .title-sub{font-size:clamp(12px,2.2vw,17px);font-weight:700;letter-spacing:.34em;color:rgba(233,237,244,.78);
+    text-shadow:0 2px 14px rgba(0,0,0,.9)}
+  #title-start{margin-top:14px;font-size:17px;padding:15px 40px;animation:titlePulse 2.4s ease-in-out infinite}
+  @keyframes titlePulse{0%,100%{box-shadow:0 0 0 rgba(232,68,58,0)}50%{box-shadow:0 0 26px rgba(232,68,58,.55)}}
+  .title-foot{font-size:12px;color:rgba(233,237,244,.4);letter-spacing:.04em;margin-top:6px}
+  .howto-row{display:flex;justify-content:space-between;gap:24px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+  .howto-row b{color:var(--teal);white-space:nowrap}
+  .howto-row span{color:var(--ink);text-align:right;font-size:14px}
   #tc-pause{position:absolute;right:16px;top:56px;width:44px;height:40px;border-radius:9px;
     background:rgba(16,19,27,.42);border:1px solid rgba(255,255,255,.14);color:rgba(233,237,244,.82);
     display:none;align-items:center;justify-content:center;font-size:16px;font-weight:800;z-index:20;
@@ -193,7 +208,7 @@
 <div class="tc" id="tc-boost">&#9889;</div>
 <div id="kbd-legend">
   <b>V</b> view &nbsp; <b>P</b> pit &nbsp; <b>R</b> mirrors &nbsp; <b>N</b> music &nbsp; <b>M</b> mute
-  &nbsp;<span style="opacity:.5">·</span>&nbsp; <span class="vtag">v29</span>
+  &nbsp;<span style="opacity:.5">·</span>&nbsp; <span class="vtag">v30</span>
 </div>
 <div id="tc-strip">
   <div class="tcbtn" id="tc-view"><span class="ic">◱</span><span class="lb">VIEW</span></div>
@@ -221,7 +236,32 @@
 </div>
 
 <!-- GARAGE / PADDOCK -->
-<div class="veil" id="garage" style="display:flex">
+<div id="title-screen">
+  <canvas id="title-cv"></canvas>
+  <div id="title-inner">
+    <h1 class="title-logo">APEX <em>VICTORIA</em></h1>
+    <div class="title-sub">CAREER · STREET RACING THE GARDEN CITY</div>
+    <button class="btn" id="title-start">Enter the Paddock</button>
+    <div class="title-foot">By Jeinis Patel · a bored Barrister &amp; moonlighting PhD Candidate</div>
+  </div>
+</div>
+<!-- HOW TO PLAY card (first-time onboarding) -->
+<div class="veil" id="howto" style="display:none">
+  <h1 style="font-size:32px">HOW TO PLAY</h1>
+  <div class="panel" style="max-width:520px;text-align:left;line-height:1.7">
+    <div class="howto-row"><b>Drive</b><span>↑ / W throttle · ↓ / S brake · ← → / A D steer</span></div>
+    <div class="howto-row"><b>Boost</b><span>Shift — a few charges per race</span></div>
+    <div class="howto-row"><b>Handbrake</b><span>Space — for tight hairpins</span></div>
+    <div class="howto-row"><b>Pit</b><span>P — fit fresh tyres on the long races</span></div>
+    <div class="howto-row"><b>Views</b><span>V cockpit / overhead · R mirrors</span></div>
+    <div class="howto-row"><b>Music</b><span>N cycles tracks · M mutes</span></div>
+    <div class="howto-row"><b>Pause</b><span>Esc — resume, restart, or quit</span></div>
+    <div class="howto-row"><b>Phone</b><span>on-screen pedals + the button strip, top-left</span></div>
+    <div style="margin-top:12px;color:var(--dim);font-size:13px">Win races to earn credits, upgrade your car, and climb the championship. On <span style="color:#ef8a7e">Ace</span> difficulty, hard crashes cause damage — three and you are out.</div>
+  </div>
+  <button class="btn teal" id="howto-go">Got it — let me race</button>
+</div>
+<div class="veil" id="garage" style="display:none">
   <h1>APEX <em>VICTORIA</em> · CAREER</h1>
   <div class="byline">By Jeinis Patel · another bored Barrister &amp; moonlighting PhD Candidate</div>
   <div class="chip" id="credits-chip"><span style="color:var(--gold)">◈</span><span id="cr">0</span> CR<span id="buildtag" style="color:#5a6170;font-size:11px;font-weight:600;margin-left:10px">loading engine…</span></div>
@@ -314,7 +354,7 @@ const UPG={
   boost:{nm:"KERS Boost",desc:"+1 boost charge per race / lvl",base:180,max:4},
 };
 const meta={credits:350,xp:0,lvl:1,event:0,points:{},up:{engine:0,brakes:0,tyres:0,boost:0},
-  diff:1, weatherPick:"dynamic", todPick:"auto", driver:"J. PATEL", teamName:"Patel GP"};
+  diff:1, weatherPick:"dynamic", todPick:"auto", driver:"J. PATEL", teamName:"Patel GP", seenHowto:false};
 function setDriverName(raw){
   let s=(raw||"").replace(/[<>]/g,"").trim().slice(0,16);
   if(!s)s="J. PATEL";
@@ -2858,10 +2898,80 @@ if(touchMode&&typeof document.body!=="undefined"&&document.body){
   if(typeof document.addEventListener==="function")
     document.addEventListener("touchmove",e=>{if(e.target&&e.target.id==="game")e.preventDefault();},{passive:false});
 }
+/* ---------------- title sequence ---------------- */
+let titleRAF=null, titleT=0;
+function drawTitleFrame(){
+  const cv=document.getElementById("title-cv");
+  if(!cv||!cv.getContext)return;
+  const w=cv.width=cv.clientWidth||innerWidth, h=cv.height=cv.clientHeight||innerHeight;
+  const c=cv.getContext("2d");
+  titleT+=0.016;
+  /* a slow cinematic sweep: drift the camera along a gentle arc over the harbour, slowly rotating */
+  const cxw=1500+Math.cos(titleT*0.12)*700;
+  const cyw=1500+Math.sin(titleT*0.10)*650;
+  const rot=Math.sin(titleT*0.06)*0.25;
+  const zoom=0.62+Math.sin(titleT*0.08)*0.06;
+  /* dusk-ish sky wash behind */
+  const sky=c.createLinearGradient(0,0,0,h);
+  sky.addColorStop(0,"#0a1430");sky.addColorStop(0.55,"#3a2a4a");sky.addColorStop(1,"#7a3f48");
+  c.fillStyle=sky;c.fillRect(0,0,w,h);
+  c.save();
+  c.translate(w/2,h/2);c.rotate(rot);c.scale(zoom,zoom);c.translate(-cxw,-cyw);
+  /* the actual baked Victoria circuit */
+  if(trackCv&&trackCv.width){
+    c.globalAlpha=0.96;
+    c.drawImage(trackCv,0,0,trackCv.width,trackCv.height,0,0,trackCv.width/BAKE_S,trackCv.height/BAKE_S);
+    c.globalAlpha=1;
+  }
+  /* landmarks, lit as if at dusk (reuse the top-down landmark renderer with a night feel) */
+  const wasNight=isNight; isNight=true;
+  try{ if(typeof drawLandmarksTopAt==="function")drawLandmarksTopAt(c,cxw,cyw,w,h);
+       else drawTitleLandmarks(c); }catch(e){}
+  isNight=wasNight;
+  c.restore();
+  /* vignette + filmic darkening at the edges */
+  const vg=c.createRadialGradient(w/2,h/2,h*0.3,w/2,h/2,h*0.85);
+  vg.addColorStop(0,"rgba(0,0,0,0)");vg.addColorStop(1,"rgba(0,0,0,.66)");
+  c.fillStyle=vg;c.fillRect(0,0,w,h);
+  titleRAF=requestAnimationFrame(drawTitleFrame);
+}
+/* draw the LAND landmarks in title space (camera-agnostic; uses world coords) */
+function drawTitleLandmarks(c){
+  const save=cx;            /* the landmark routines draw to global cx; temporarily repoint */
+  try{ globalThis.cx=c; if(typeof drawLandmarksTop==="function"){
+    /* drawLandmarksTop expects camX,camY in screen space; we've already transformed, so pass 0,0 */
+    drawLandmarksTop(0,0);
+  }}catch(e){}
+  finally{ globalThis.cx=save; }
+}
+function startTitle(){
+  titleT=0;
+  if(titleRAF)cancelAnimationFrame(titleRAF);
+  drawTitleFrame();
+}
+function endTitle(){
+  if(titleRAF){cancelAnimationFrame(titleRAF);titleRAF=null;}
+  const ts=document.getElementById("title-screen");if(ts)ts.style.display="none";
+}
+(function(){
+  const startBtn=document.getElementById("title-start");
+  const go=()=>{ initAudio(); endTitle();
+    /* first-time players see the how-to card; afterwards go straight to the garage */
+    if(!meta.seenHowto){ meta.seenHowto=true; show("howto",true); }
+    else { renderGarage(); show("garage",true); }
+  };
+  if(startBtn){startBtn.onclick=go;
+    if(startBtn.addEventListener)startBtn.addEventListener("touchend",e=>{e.preventDefault();go();},{passive:false});}
+  const hg=document.getElementById("howto-go");
+  const hgo=()=>{ show("howto",false); renderGarage(); show("garage",true); };
+  if(hg){hg.onclick=hgo; if(hg.addEventListener)hg.addEventListener("touchend",e=>{e.preventDefault();hgo();},{passive:false});}
+})();
+
 /* ---------------- boot ---------------- */
 buildTrack(false);
 renderGarage();
-(function(){const b=document.getElementById("buildtag");if(b)b.textContent="engine ready · v29";})();
+startTitle();
+(function(){const b=document.getElementById("buildtag");if(b)b.textContent="engine ready · v30";})();
 let last=performance.now();
 let frameErrs=0;
 function loop(now){
