@@ -209,7 +209,7 @@
 <div class="tc" id="tc-boost">&#9889;</div>
 <div id="kbd-legend">
   <b>V</b> view &nbsp; <b>P</b> pit &nbsp; <b>R</b> mirrors &nbsp; <b>N</b> music &nbsp; <b>M</b> mute
-  &nbsp;<span style="opacity:.5">·</span>&nbsp; <span class="vtag">v32</span>
+  &nbsp;<span style="opacity:.5">·</span>&nbsp; <span class="vtag">v33</span>
 </div>
 <div id="tc-strip">
   <div class="tcbtn" id="tc-view"><span class="ic">◱</span><span class="lb">VIEW</span></div>
@@ -415,6 +415,7 @@ for(const t of TEAMS)meta.points[t.n]=0; meta.points["__PLAYER__"]=0;
 const CIRCUITS={
   /* The Harbour Circuit — the original sweeping grand-prix loop */
   harbour:{name:"Harbour Circuit", blurb:"The classic capital loop \u2014 fast, flowing, harbour-side.",
+    land:"harbour", water:"harbour",
     ctrl:[
     [700,1500],[1500,1480],[2200,1430],[2520,1180],[2580,800],[2520,520],
     [1900,380],[1300,420],[950,640],[880,1000],[620,1280],[520,1600],
@@ -424,6 +425,7 @@ const CIRCUITS={
   ]},
   /* The Gorge Sprint — tighter, more technical: chicanes, hairpins, a twisty inland run */
   gorge:{name:"The Gorge", blurb:"Tight, technical, twisting along the Gorge waterway \u2014 a driver's track.",
+    land:"gorge", water:"gorge",
     ctrl:[
     [820,1480],[1340,1420],[1620,1520],[1780,1340],[1660,1120],[1380,1080],
     [1500,860],[1880,800],[2020,1000],[2120,1320],[2060,1560],[2300,1720],
@@ -924,7 +926,10 @@ function startRace(){
     state.fog = state.wx==="fog"?1:0;
     state.glare = state.wx==="glare"?1:0;
   }
-  CTRL = (CIRCUITS[meta.circuit]||CIRCUITS.harbour).ctrl;
+  const _circ = CIRCUITS[meta.circuit]||CIRCUITS.harbour;
+  CTRL = _circ.ctrl;
+  LAND  = (_circ.land==="gorge") ? LAND_GORGE  : LAND_HARBOUR;
+  WATER = (_circ.water==="gorge")? WATER_GORGE : WATER_HARBOUR;
   buildTrack(ev.rev);
   skids=[];sparks=[];dust=[];replayBuf=[];replayAccum=0;
   dryLine=new Float32Array(N);   /* 0 = wet, 1 = swept dry; starts wet in the wet */
@@ -1329,12 +1334,23 @@ function rr(c,x,y,w,h,r){ // roundRect polyfill (older iOS Safari)
   c.lineTo(x+r,y+h);c.quadraticCurveTo(x,y+h,x,y+h-r);
   c.lineTo(x,y+r);c.quadraticCurveTo(x,y,x+r,y);c.closePath();
 }
-const WATER=[
+const WATER_HARBOUR=[
   [[1050,660],[1900,530],[2330,710],[2390,1090],[2040,1300],[1300,1290],[1000,1010]], // Inner Harbour
   [[150,1210],[410,1260],[400,1690],[390,2080],[110,2160],[60,1300]],                 // Wharf basin, opening to the strait
   [[-900,2080],[110,2160],[390,2080],[520,2560],[2680,2640],[3700,2720],[3700,4400],[-900,4400]], // Juan de Fuca Strait
   [[1740,90],[2010,90],[2055,360],[2010,640],[1740,640],[1700,360]],  // Gorge channel under Johnson St Bridge
 ];
+/* The Gorge waterway: a long narrow tidal inlet winding through the middle of the circuit,
+   with a pinch under the Tillicum Bridge (the famous reversing falls) and a wider rowing basin. */
+const WATER_GORGE=[
+  /* upper waterway (north) widening into the rowing basin */
+  [[1180,300],[1520,360],[1680,640],[1560,920],[1700,1180],[1640,1460],
+   [1820,1640],[1760,1960],[1500,2080],[1280,1900],[1360,1560],[1240,1280],
+   [1340,980],[1180,720],[1060,460]],
+  /* a side arm reaching east toward the Selkirk basin */
+  [[1760,1960],[2120,1900],[2360,2060],[2300,2300],[2000,2320],[1820,2160]],
+];
+let WATER=WATER_HARBOUR;
 function drawWater(t){
   for(const poly of WATER){
     t.fillStyle=isNight?"#0c2030":"#1d4e63";
@@ -1351,7 +1367,7 @@ function drawWater(t){
     }
   }
 }
-const LAND=[
+const LAND_HARBOUR=[
   {x:1556,y:1677,t:"leg",  label:"B.C. Legislature"},
   {x:2209,y:1145,t:"emp",  label:"The Empress"},
   {x:2700,y:610, t:"gate", label:"Chinatown Gate"},
@@ -1381,7 +1397,34 @@ const LAND=[
   {x:2050,y:1750,t:"geeseV",label:"",sea:true,ph:0},
   {x:2300,y:2160,t:"geese", label:"",ph:0.0},
   {x:2380,y:2240,t:"geese", label:"",ph:1.3},
+  /* windsurfers off Dallas Road on the Juan de Fuca strait (track 1 icon) */
+  {x:1150,y:2780,t:"windsurf",label:"",sea:true,ph:0.0},
+  {x:1700,y:2860,t:"windsurf",label:"",sea:true,ph:1.4},
+  {x:2150,y:2780,t:"windsurf",label:"",sea:true,ph:3.1},
 ];
+/* ---- The Gorge world: its own landmarks, evoking the waterway's real character ---- */
+const LAND_GORGE=[
+  {x:1529,y:989,t:"trestle", label:"Selkirk Trestle"},      /* the black wooden rail trestle over the water */
+  {x:2008,y:739, t:"pavilion",label:"Gorge Park Pavilion"},  /* Esquimalt Gorge Park + Japanese garden */
+  {x:1100,y:1700,t:"golf",   label:"Gorge Vale Golf Club"},
+  {x:2180,y:1500,t:"trail",  label:"Galloping Goose Trail"}, /* the cycling/walking trail marker */
+  {x:880, y:900, t:"heritage",label:"Point Ellice House"},   /* heritage house + gardens by the water */
+  {x:2120,y:2180,t:"tilli",  label:"Tillicum Narrows"},      /* the reversing falls under the bridge */
+  /* paddlers on the Gorge waterway (the Gorge's version of the orcas) */
+  {x:1560,y:760, t:"rower",  label:"",sea:true,ph:0.0},
+  {x:1640,y:1500,t:"rower",  label:"",sea:true,ph:1.6},
+  {x:1980,y:2100,t:"kayak",  label:"",sea:true,ph:0.0},
+  {x:2200,y:2160,t:"kayak",  label:"",sea:true,ph:2.4},
+  {x:1420,y:1820,t:"kayak",  label:"",sea:true,ph:4.0},
+  /* a heron standing in the shallows, a Gorge staple */
+  {x:1320,y:1880,t:"heron",  label:"",ph:0.0},
+  /* geese + trail greenery to make the parkland feel alive */
+  {x:1180,y:1640,t:"geese",  label:"",ph:0.0},
+  {x:2240,y:1560,t:"geese",  label:"",ph:1.1},
+  {x:1500,y:760, t:"flyby",  label:"",sea:true,ph:0.0, spd:0.09, dir:1, alt:160},
+  {x:1900,y:1900,t:"flyby",  label:"",sea:true,ph:0.5, spd:0.11, dir:-1,alt:130},
+];
+let LAND=LAND_HARBOUR;
 function legLights(c,x,y,w,h,domeR){ // the famous outline of lights
   c.fillStyle="#ffe6a0";
   const step=12;
@@ -1646,6 +1689,120 @@ function drawLandTop(l,camX,camY){
       cx.fillStyle="#b53a2e";cx.fillRect(16,-4,7,8);          /* nose */
       cx.fillStyle="#8a8578";cx.fillRect(-20,9,6,8);cx.fillRect(2,9,6,8); /* floats */
       cx.fillStyle="#c0c0c0";cx.fillRect(-26,-2,5,4);         /* tail */
+      cx.restore();
+      break;}
+    case "trestle":{
+      /* Selkirk Trestle: long black wooden rail trestle striding across the water */
+      const len=150;
+      cx.fillStyle=isNight?"#1a1712":"#2a2018";
+      cx.fillRect(-len,-7,len*2,14);                              /* the deck */
+      cx.fillStyle=isNight?"#0f0d0a":"#1a130d";
+      for(let bx=-len;bx<=len;bx+=20){                            /* trestle bents (legs) */
+        cx.fillRect(bx-2,-7,4,38);cx.fillRect(bx-9,24,18,3);
+        cx.beginPath();cx.moveTo(bx-9,30);cx.lineTo(bx,8);cx.lineTo(bx+9,30);cx.closePath();
+      }
+      cx.fillStyle=isNight?"#000":"#15100a";                      /* deck planks */
+      for(let bx=-len;bx<len;bx+=7)cx.fillRect(bx,-7,1,14);
+      cx.fillStyle="#6a5238";cx.fillRect(-len,-9,len*2,2);        /* hand rail */
+      break;}
+    case "pavilion":{
+      /* Gorge Park Pavilion: a green-roofed garden pavilion with a little red bridge */
+      cx.fillStyle=isNight?"#3a3a30":"#cdc4ad";cx.fillRect(-30,-22,60,44); /* base */
+      cx.fillStyle=isNight?"#1d4a3c":"#2e7d63";                   /* pagoda roof */
+      cx.beginPath();cx.moveTo(-38,-22);cx.lineTo(0,-44);cx.lineTo(38,-22);cx.closePath();cx.fill();
+      cx.fillStyle=isNight?"#163d33":"#256b54";cx.fillRect(-4,-50,8,8);
+      /* a red japanese garden bridge beside it */
+      cx.strokeStyle="#b0392b";cx.lineWidth=4;cx.beginPath();cx.arc(34,30,18,Math.PI,2*Math.PI);cx.stroke();
+      /* garden greenery */
+      cx.fillStyle=isNight?"#1f3a24":"#3f7a42";
+      for(const gx of [-34,30]){cx.beginPath();cx.arc(gx,18,7,0,7);cx.fill();}
+      break;}
+    case "golf":{
+      /* Gorge Vale Golf Club: rolling green with a flag and bunkers */
+      cx.fillStyle=isNight?"#234a2a":"#4c9a4f";cx.beginPath();cx.ellipse(0,0,46,34,0,0,7);cx.fill();
+      cx.fillStyle=isNight?"#2a5230":"#57a85a";cx.beginPath();cx.ellipse(-8,-4,30,20,0,0,7);cx.fill();
+      cx.fillStyle=isNight?"#caa86a":"#e6d2a0";                   /* bunkers */
+      cx.beginPath();cx.ellipse(22,12,11,7,0,0,7);cx.fill();cx.beginPath();cx.ellipse(-26,14,8,5,0,0,7);cx.fill();
+      cx.fillStyle="#2a2a2a";cx.fillRect(2,-22,1.5,18);           /* flag pole */
+      cx.fillStyle="#e23a2e";cx.beginPath();cx.moveTo(3.5,-22);cx.lineTo(13,-18);cx.lineTo(3.5,-14);cx.closePath();cx.fill();
+      cx.fillStyle="#fff";cx.beginPath();cx.arc(3,-3,2,0,7);cx.fill();  /* the hole/ball */
+      break;}
+    case "trail":{
+      /* Galloping Goose Trail marker: a gravel path with a trail post + greenery */
+      cx.fillStyle=isNight?"#3a352a":"#c9b78a";cx.save();cx.rotate(0.5);cx.fillRect(-60,-7,120,14);cx.restore();
+      cx.fillStyle=isNight?"#2a2018":"#5a4632";cx.fillRect(-2,-26,4,22);   /* signpost */
+      cx.fillStyle="#2e7d4f";cx.fillRect(-16,-26,30,9);                    /* green trail sign */
+      cx.fillStyle=isNight?"#1f3a24":"#3f7a42";
+      for(const gx of [-30,26,4]){cx.beginPath();cx.arc(gx,16,8,0,7);cx.fill();}
+      break;}
+    case "heritage":{
+      /* Point Ellice House: a yellow heritage house with a steep roof + garden */
+      cx.fillStyle=isNight?"#5a4f3a":"#d9c47a";cx.fillRect(-26,-18,52,36);
+      cx.fillStyle=isNight?"#3a2a22":"#7a4636";                   /* steep roof */
+      cx.beginPath();cx.moveTo(-30,-18);cx.lineTo(0,-40);cx.lineTo(30,-18);cx.closePath();cx.fill();
+      cx.fillStyle=isNight?"#2a2018":"#5a4632";cx.fillRect(-8,-32,6,10); /* chimney */
+      cx.fillStyle=isNight?"#caa84a":"#ffd97a";                   /* windows */
+      for(const wx of [-16,-2,12])cx.fillRect(wx,-8,8,10);
+      cx.fillStyle=isNight?"#1f3a24":"#3f7a42";                   /* garden hedge */
+      cx.fillRect(-30,20,60,8);
+      break;}
+    case "tilli":{
+      /* Tillicum Narrows: the reversing falls — churning water under a small bridge */
+      cx.strokeStyle=isNight?"#3a3833":"#8a7a5c";cx.lineWidth=8;       /* the bridge span */
+      cx.beginPath();cx.moveTo(-40,-6);cx.lineTo(40,-6);cx.stroke();
+      cx.fillStyle=isNight?"#2a2620":"#6a5a48";cx.fillRect(-44,-10,8,20);cx.fillRect(36,-10,8,20);
+      /* churning whitewater */
+      cx.fillStyle=isNight?"rgba(160,200,230,.5)":"rgba(255,255,255,.7)";
+      for(let i=0;i<10;i++){const a=i*2.4+state.t*2,r=8+((i*37)%20);
+        cx.beginPath();cx.arc(Math.cos(a)*r,12+Math.sin(a)*6,3,0,7);cx.fill();}
+      break;}
+    case "rower":{
+      /* a rowing shell with oars sweeping — long thin boat on the Gorge */
+      const ph=(l.ph||0), bob=Math.sin(state.t*1.5+ph)*1.2, sweep=Math.sin(state.t*2.4+ph)*0.5;
+      cx.save();cx.translate(0,bob);cx.rotate(0.3);
+      cx.fillStyle="rgba(255,255,255,.25)";cx.beginPath();cx.ellipse(-30,3,24,5,0,0,7);cx.fill(); /* wake */
+      cx.fillStyle=isNight?"#5a5240":"#e8dcc0";cx.beginPath();cx.ellipse(0,0,34,4,0,0,7);cx.fill(); /* hull */
+      cx.strokeStyle=isNight?"#6a6450":"#b0a890";cx.lineWidth=1.5;        /* oars */
+      for(const ox of [-12,0,12]){cx.save();cx.translate(ox,0);cx.rotate(sweep);
+        cx.beginPath();cx.moveTo(0,0);cx.lineTo(0,-16);cx.moveTo(0,0);cx.lineTo(0,16);cx.stroke();cx.restore();}
+      cx.restore();
+      break;}
+    case "kayak":{
+      /* a colourful kayak with a paddler */
+      const ph=(l.ph||0), bob=Math.sin(state.t*1.8+ph)*1.4, pad=Math.sin(state.t*3+ph)*0.6;
+      const hue=["#e8743a","#2a8cc9","#e2c23a"][Math.floor(ph)%3];
+      cx.save();cx.translate(0,bob);cx.rotate(0.4+Math.sin(ph)*0.3);
+      cx.fillStyle="rgba(255,255,255,.22)";cx.beginPath();cx.ellipse(-16,2,14,4,0,0,7);cx.fill();
+      cx.fillStyle=hue;cx.beginPath();cx.ellipse(0,0,18,5,0,0,7);cx.fill();      /* kayak */
+      cx.fillStyle=isNight?"#3a4658":"#34506a";cx.beginPath();cx.arc(0,0,3.5,0,7);cx.fill(); /* paddler */
+      cx.strokeStyle=isNight?"#6a6450":"#cfc8b4";cx.lineWidth=1.6;cx.save();cx.rotate(pad); /* paddle */
+      cx.beginPath();cx.moveTo(-12,0);cx.lineTo(12,0);cx.stroke();cx.restore();
+      cx.restore();
+      break;}
+    case "heron":{
+      /* a great blue heron standing in the shallows */
+      const ph=(l.ph||0);
+      cx.fillStyle=isNight?"#4a5560":"#7a8a96";
+      cx.beginPath();cx.ellipse(0,0,9,4,0,0,7);cx.fill();          /* body */
+      cx.fillStyle=isNight?"#3a4550":"#6a7a86";
+      cx.fillRect(-1,-14,2,14);                                    /* long neck */
+      cx.beginPath();cx.arc(0,-15,2.5,0,7);cx.fill();              /* head */
+      cx.fillStyle="#e8c23a";cx.fillRect(0,-16,7,1.4);            /* beak */
+      cx.strokeStyle=isNight?"#2a3038":"#3a4650";cx.lineWidth=1;  /* legs */
+      cx.beginPath();cx.moveTo(-2,4);cx.lineTo(-3,14);cx.moveTo(2,4);cx.lineTo(3,14);cx.stroke();
+      break;}
+    case "windsurf":{
+      /* windsurfers off Dallas Road — colourful sails skimming the strait */
+      const ph=(l.ph||0), lean=Math.sin(state.t*1.2+ph)*0.4, glide=Math.sin(state.t*0.5+ph)*14;
+      cx.save();cx.translate(glide,0);cx.rotate(0.2);
+      cx.fillStyle="rgba(255,255,255,.3)";cx.beginPath();cx.ellipse(-14,2,16,3,0,0,7);cx.fill(); /* wake */
+      cx.fillStyle=isNight?"#4a4640":"#e0e0e0";cx.beginPath();cx.ellipse(0,2,16,3.5,0,0,7);cx.fill(); /* board */
+      cx.save();cx.rotate(lean);                                   /* the sail */
+      const sailCol=["#e8442e","#2a8cc9","#f0a83a"][Math.floor(ph)%3];
+      cx.fillStyle=sailCol;cx.beginPath();cx.moveTo(0,2);cx.lineTo(2,-26);cx.lineTo(14,-6);cx.closePath();cx.fill();
+      cx.strokeStyle="#2a2a2a";cx.lineWidth=1.5;cx.beginPath();cx.moveTo(0,2);cx.lineTo(2,-26);cx.stroke();
+      cx.restore();
+      cx.fillStyle=isNight?"#2a3038":"#34506a";cx.beginPath();cx.arc(-1,-2,2.5,0,7);cx.fill(); /* surfer */
       cx.restore();
       break;}
   }
@@ -2029,6 +2186,80 @@ function drawLandSprite(l,p,f){
       cx.fillStyle="#cfc8b4";cx.fillRect(x-w*0.12,yy-w*0.28,w*0.24,w*0.56);
       cx.fillStyle="#b53a2e";cx.fillRect(x+w*0.4,yy-w*0.08,w*0.14,w*0.16);
       cx.fillStyle="#8a8578";cx.fillRect(x-w*0.42,yy+w*0.16,w*0.12,w*0.14);cx.fillRect(x+w*0.06,yy+w*0.16,w*0.12,w*0.14);
+      break;}
+    case "trestle":{
+      /* long black trestle receding across the water */
+      const w=200*sc;
+      cx.fillStyle=isNight?"#15120d":"#2a2018";
+      cx.fillRect(x-w*0.9,y-w*0.07,w*1.8,w*0.14);
+      cx.fillStyle=isNight?"#0a0805":"#181009";
+      for(let i=-9;i<=9;i++){const bx=x+i*w*0.1;cx.fillRect(bx-w*0.01,y-w*0.05,w*0.02,w*0.4);}
+      cx.fillStyle="#6a5238";cx.fillRect(x-w*0.9,y-w*0.09,w*1.8,w*0.03);
+      break;}
+    case "pavilion":{
+      const w=120*sc;
+      cx.fillStyle=isNight?"#3a3a30":"#cdc4ad";cx.fillRect(x-w*0.4,y-w*0.3,w*0.8,w*0.6);
+      cx.fillStyle=isNight?"#1d4a3c":"#2e7d63";
+      cx.beginPath();cx.moveTo(x-w*0.5,y-w*0.3);cx.lineTo(x,y-w*0.66);cx.lineTo(x+w*0.5,y-w*0.3);cx.closePath();cx.fill();
+      cx.strokeStyle="#b0392b";cx.lineWidth=w*0.05;cx.beginPath();cx.arc(x+w*0.5,y+w*0.4,w*0.22,Math.PI,2*Math.PI);cx.stroke();
+      break;}
+    case "golf":{
+      const w=130*sc;
+      cx.fillStyle=isNight?"#234a2a":"#4c9a4f";cx.beginPath();cx.ellipse(x,y,w*0.7,w*0.4,0,0,7);cx.fill();
+      cx.fillStyle=isNight?"#caa86a":"#e6d2a0";cx.beginPath();cx.ellipse(x+w*0.34,y+w*0.16,w*0.16,w*0.09,0,0,7);cx.fill();
+      cx.fillStyle="#2a2a2a";cx.fillRect(x,y-w*0.34,w*0.025,w*0.34);
+      cx.fillStyle="#e23a2e";cx.beginPath();cx.moveTo(x+w*0.025,y-w*0.34);cx.lineTo(x+w*0.18,y-w*0.27);cx.lineTo(x+w*0.025,y-w*0.2);cx.closePath();cx.fill();
+      break;}
+    case "trail":{
+      const w=130*sc;
+      cx.fillStyle=isNight?"#3a352a":"#c9b78a";cx.fillRect(x-w*0.7,y-w*0.06,w*1.4,w*0.16);
+      cx.fillStyle=isNight?"#2a2018":"#5a4632";cx.fillRect(x-w*0.03,y-w*0.4,w*0.06,w*0.34);
+      cx.fillStyle="#2e7d4f";cx.fillRect(x-w*0.22,y-w*0.4,w*0.42,w*0.14);
+      break;}
+    case "heritage":{
+      const w=120*sc;
+      cx.fillStyle=isNight?"#5a4f3a":"#d9c47a";cx.fillRect(x-w*0.34,y-w*0.24,w*0.68,w*0.48);
+      cx.fillStyle=isNight?"#3a2a22":"#7a4636";
+      cx.beginPath();cx.moveTo(x-w*0.4,y-w*0.24);cx.lineTo(x,y-w*0.56);cx.lineTo(x+w*0.4,y-w*0.24);cx.closePath();cx.fill();
+      cx.fillStyle=isNight?"#caa84a":"#ffd97a";for(let i=-1;i<=1;i++)cx.fillRect(x+i*w*0.2-w*0.05,y-w*0.1,w*0.1,w*0.14);
+      break;}
+    case "tilli":{
+      const w=130*sc;
+      cx.strokeStyle=isNight?"#3a3833":"#8a7a5c";cx.lineWidth=w*0.1;
+      cx.beginPath();cx.moveTo(x-w*0.5,y-w*0.06);cx.lineTo(x+w*0.5,y-w*0.06);cx.stroke();
+      cx.fillStyle=isNight?"rgba(160,200,230,.5)":"rgba(255,255,255,.7)";
+      for(let i=0;i<8;i++){const a=i*2.4+state.t*2,r=w*0.1+((i*37)%(w*0.2));
+        cx.beginPath();cx.arc(x+Math.cos(a)*r,y+w*0.16+Math.sin(a)*w*0.08,w*0.04,0,7);cx.fill();}
+      break;}
+    case "rower":{
+      const w=120*sc, ph=(l.ph||0),sweep=Math.sin(state.t*2.4+ph)*0.5;
+      cx.fillStyle=isNight?"#5a5240":"#e8dcc0";cx.beginPath();cx.ellipse(x,y,w*0.5,w*0.07,0,0,7);cx.fill();
+      cx.strokeStyle=isNight?"#6a6450":"#b0a890";cx.lineWidth=w*0.025;
+      for(const ox of [-0.18,0,0.18]){cx.save();cx.translate(x+ox*w,y);cx.rotate(sweep);
+        cx.beginPath();cx.moveTo(0,0);cx.lineTo(0,-w*0.24);cx.moveTo(0,0);cx.lineTo(0,w*0.24);cx.stroke();cx.restore();}
+      break;}
+    case "kayak":{
+      const w=110*sc, ph=(l.ph||0),pad=Math.sin(state.t*3+ph)*0.6;
+      const hue=["#e8743a","#2a8cc9","#e2c23a"][Math.floor(ph)%3];
+      cx.fillStyle=hue;cx.beginPath();cx.ellipse(x,y,w*0.26,w*0.08,0,0,7);cx.fill();
+      cx.fillStyle=isNight?"#3a4658":"#34506a";cx.beginPath();cx.arc(x,y,w*0.05,0,7);cx.fill();
+      cx.strokeStyle=isNight?"#6a6450":"#cfc8b4";cx.lineWidth=w*0.025;cx.save();cx.translate(x,y);cx.rotate(pad);
+      cx.beginPath();cx.moveTo(-w*0.18,0);cx.lineTo(w*0.18,0);cx.stroke();cx.restore();
+      break;}
+    case "heron":{
+      const w=110*sc;
+      cx.fillStyle=isNight?"#4a5560":"#7a8a96";cx.beginPath();cx.ellipse(x,y,w*0.13,w*0.06,0,0,7);cx.fill();
+      cx.fillStyle=isNight?"#3a4550":"#6a7a86";cx.fillRect(x-w*0.015,y-w*0.2,w*0.03,w*0.2);
+      cx.beginPath();cx.arc(x,y-w*0.21,w*0.035,0,7);cx.fill();
+      cx.fillStyle="#e8c23a";cx.fillRect(x,y-w*0.22,w*0.1,w*0.02);
+      break;}
+    case "windsurf":{
+      const w=120*sc, ph=(l.ph||0),lean=Math.sin(state.t*1.2+ph)*0.4;
+      cx.fillStyle=isNight?"#4a4640":"#e0e0e0";cx.beginPath();cx.ellipse(x,y,w*0.22,w*0.05,0,0,7);cx.fill();
+      cx.save();cx.translate(x,y);cx.rotate(lean);
+      const sailCol=["#e8442e","#2a8cc9","#f0a83a"][Math.floor(ph)%3];
+      cx.fillStyle=sailCol;cx.beginPath();cx.moveTo(0,0);cx.lineTo(w*0.03,-w*0.4);cx.lineTo(w*0.2,-w*0.1);cx.closePath();cx.fill();
+      cx.restore();
       break;}
   }
   if(l.label&&p.z<1150){
@@ -3119,7 +3350,7 @@ function endTitle(){
 buildTrack(false);
 renderGarage();
 startTitle();
-(function(){const b=document.getElementById("buildtag");if(b)b.textContent="engine ready · v32";})();
+(function(){const b=document.getElementById("buildtag");if(b)b.textContent="engine ready · v33";})();
 let last=performance.now();
 let frameErrs=0;
 function loop(now){
