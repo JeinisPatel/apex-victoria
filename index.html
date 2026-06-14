@@ -209,7 +209,7 @@
 <div class="tc" id="tc-boost">&#9889;</div>
 <div id="kbd-legend">
   <b>V</b> view &nbsp; <b>P</b> pit &nbsp; <b>R</b> mirrors &nbsp; <b>N</b> music &nbsp; <b>M</b> mute
-  &nbsp;<span style="opacity:.5">·</span>&nbsp; <span class="vtag">v34</span>
+  &nbsp;<span style="opacity:.5">·</span>&nbsp; <span class="vtag">v35</span>
 </div>
 <div id="tc-strip">
   <div class="tcbtn" id="tc-view"><span class="ic">◱</span><span class="lb">VIEW</span></div>
@@ -1410,6 +1410,15 @@ const LAND_GORGE=[
   {x:2240,y:1500,t:"trail",  label:"Galloping Goose Trail"}, /* the cycling/walking trail marker */
   {x:880, y:900, t:"heritage",label:"Point Ellice House"},   /* heritage house + gardens by the water */
   {x:2120,y:2180,t:"tilli",  label:"Tillicum Narrows"},      /* the reversing falls under the bridge */
+  {x:700, y:1180,t:"school", label:"Craigflower Schoolhouse"},
+  {x:1792,y:1603,t:"boathouse",label:"Rowing Club"},
+  {x:2180,y:820, t:"torii",  label:""},                      /* Takata Japanese garden */
+  {x:692, y:1567,t:"oak",    label:"",ph:0.0},
+  {x:2325,y:1915,t:"oak",    label:"",ph:1.0},
+  {x:1000,y:2080,t:"oak",    label:"",ph:2.0},
+  {x:2360,y:1180,t:"oak",    label:"",ph:3.0},
+  {x:640, y:980, t:"oak",    label:"",ph:4.0},
+  {x:1380,y:520,t:"swan",   label:"",sea:true,ph:0.0},
   /* paddlers on the Gorge waterway (the Gorge's version of the orcas) */
   {x:1530,y:708, t:"rower",  label:"",sea:true,ph:0.0},
   {x:1591,y:1379,t:"rower",  label:"",sea:true,ph:1.6},
@@ -1792,14 +1801,110 @@ function drawLandTop(l,camX,camY){
       cx.fillStyle=isNight?"#4a4438":"#f0ead8";for(let fx=-30;fx<30;fx+=5)cx.fillRect(fx,19,1.6,5);
       break;}
     case "tilli":{
-      /* Tillicum Narrows: the reversing falls — churning water under a small bridge */
-      cx.strokeStyle=isNight?"#3a3833":"#8a7a5c";cx.lineWidth=8;       /* the bridge span */
-      cx.beginPath();cx.moveTo(-40,-6);cx.lineTo(40,-6);cx.stroke();
-      cx.fillStyle=isNight?"#2a2620":"#6a5a48";cx.fillRect(-44,-10,8,20);cx.fillRect(36,-10,8,20);
-      /* churning whitewater */
-      cx.fillStyle=isNight?"rgba(160,200,230,.5)":"rgba(255,255,255,.7)";
-      for(let i=0;i<10;i++){const a=i*2.4+state.t*2,r=8+((i*37)%20);
-        cx.beginPath();cx.arc(Math.cos(a)*r,12+Math.sin(a)*6,3,0,7);cx.fill();}
+      /* Tillicum Narrows: the famous tidal reversing rapids churning under the bridge */
+      /* dark narrows water */
+      cx.fillStyle=isNight?"#0c2030":"#1d4e63";cx.fillRect(-46,2,92,34);
+      /* rocks studding the narrows */
+      cx.fillStyle=isNight?"#2a2c30":"#5a5650";
+      for(const[rx,ry,rr]of[[-28,18,6],[10,26,7],[30,14,5],[-6,30,4]]){cx.beginPath();cx.arc(rx,ry,rr,0,7);cx.fill();}
+      /* directional flow streaks (the reversing current) */
+      cx.strokeStyle=isNight?"rgba(150,190,220,.35)":"rgba(230,245,255,.5)";cx.lineWidth=2;
+      const dir=Math.sin(state.t*0.5)>0?1:-1;
+      for(let i=0;i<6;i++){const yy=8+i*5;cx.beginPath();cx.moveTo(-36,yy);
+        cx.lineTo(-36+dir*(20+((i*13)%20)),yy+2);cx.stroke();}
+      /* churning whitewater + spray over the rocks */
+      cx.fillStyle=isNight?"rgba(180,210,235,.6)":"rgba(255,255,255,.85)";
+      for(let i=0;i<16;i++){const a=i*2.4+state.t*3,r=6+((i*37)%26);
+        cx.beginPath();cx.arc(Math.cos(a)*r,18+Math.sin(a*1.3)*9,2.5+((i*7)%3),0,7);cx.fill();}
+      /* the bridge: deck + railings + stone piers */
+      cx.fillStyle=isNight?"#3a3833":"#8a7a5c";cx.fillRect(-44,-9,88,7);          /* deck */
+      cx.fillStyle=isNight?"#4a4840":"#a59478";cx.fillRect(-44,-12,88,2);          /* rail */
+      cx.strokeStyle=isNight?"#4a4840":"#a59478";cx.lineWidth=1.4;
+      for(let px=-42;px<=42;px+=10){cx.beginPath();cx.moveTo(px,-9);cx.lineTo(px,-12);cx.stroke();}
+      cx.fillStyle=isNight?"#2a2620":"#6a5a48";cx.fillRect(-48,-12,9,24);cx.fillRect(39,-12,9,24); /* stone piers */
+      break;}
+    case "school":{
+      /* Craigflower Schoolhouse: white colonial two-storey with a bell cupola */
+      cx.fillStyle="rgba(0,0,0,.18)";cx.beginPath();cx.ellipse(2,5,32,24,0,0,7);cx.fill();
+      cx.fillStyle=isNight?"#4a4842":"#eceae0";cx.fillRect(-26,-18,52,38);          /* white walls */
+      cx.fillStyle=isNight?"#3a3833":"#d8d4c6";cx.fillRect(22,-18,4,38);            /* shaded side */
+      /* symmetric windows, two rows */
+      cx.fillStyle=isNight?"#caa84a":"#a9c4d6";
+      for(let r=0;r<2;r++)for(const wx of[-18,-6,8,18])cx.fillRect(wx,-12+r*15,5,9);
+      cx.fillStyle=isNight?"#2a2620":"#6a4a32";cx.fillRect(-4,6,9,14);              /* central door */
+      /* hipped roof */
+      cx.fillStyle=isNight?"#2c2622":"#5a4a3a";
+      cx.beginPath();cx.moveTo(-30,-18);cx.lineTo(-14,-30);cx.lineTo(14,-30);cx.lineTo(30,-18);cx.closePath();cx.fill();
+      /* white bell cupola */
+      cx.fillStyle=isNight?"#4a4842":"#eceae0";cx.fillRect(-5,-40,10,11);
+      cx.fillStyle=isNight?"#2c2622":"#5a4a3a";cx.beginPath();cx.moveTo(-6,-40);cx.lineTo(0,-47);cx.lineTo(6,-40);cx.closePath();cx.fill();
+      break;}
+    case "boathouse":{
+      /* Victoria City Rowing Club: a long low boathouse with open bays + a dock */
+      cx.fillStyle="rgba(0,0,0,.16)";cx.fillRect(-40,-14,84,34);
+      /* dock reaching toward the water */
+      cx.fillStyle=isNight?"#3a352a":"#9a8458";cx.fillRect(-10,18,20,30);
+      cx.fillStyle=isNight?"#2a2620":"#7a6848";for(let dy=18;dy<48;dy+=6)cx.fillRect(-10,dy,20,1.5);
+      /* timber walls */
+      cx.fillStyle=isNight?"#43403a":"#b0a48c";cx.fillRect(-38,-12,76,30);
+      /* open boat bays with racing shells visible */
+      cx.fillStyle=isNight?"#15140f":"#2a2620";
+      for(const bx of[-30,-8,14]){cx.fillRect(bx,-2,18,18);}
+      const shellCols=["#e8743a","#2a8cc9","#e2c23a"];
+      for(let i=0;i<3;i++){const bx=[-30,-8,14][i];cx.fillStyle=shellCols[i];cx.fillRect(bx+1,4,16,2.4);cx.fillStyle="#cfc8b4";cx.fillRect(bx+1,9,16,2);}
+      /* pitched roof + signage */
+      cx.fillStyle=isNight?"#2c2622":"#6a5a44";
+      cx.beginPath();cx.moveTo(-42,-12);cx.lineTo(0,-26);cx.lineTo(42,-12);cx.closePath();cx.fill();
+      cx.fillStyle=isNight?"#1d4a3c":"#2e7d63";cx.fillRect(-14,-16,28,4);
+      break;}
+    case "torii":{
+      /* Takata Japanese Garden: a red torii gate + a stone lantern + a maple */
+      /* maple with red foliage */
+      cx.fillStyle=isNight?"#3a2420":"#8a3a2a";cx.beginPath();cx.arc(26,-6,11,0,7);cx.fill();
+      cx.fillStyle=isNight?"#4a2a24":"#b04a32";cx.beginPath();cx.arc(30,-10,8,0,7);cx.fill();
+      /* the torii gate */
+      cx.fillStyle=isNight?"#7a2820":"#c0392b";
+      cx.fillRect(-16,-22,4,30);cx.fillRect(12,-22,4,30);          /* two posts */
+      cx.fillRect(-22,-22,44,5);                                    /* top lintel */
+      cx.fillStyle=isNight?"#5a1d18":"#9a2c20";cx.fillRect(-20,-24,40,3); /* upper curved beam */
+      cx.fillRect(-12,-14,24,3);                                    /* tie beam */
+      /* stone lantern (toro) */
+      cx.fillStyle=isNight?"#4a4a44":"#9a968a";
+      cx.fillRect(-30,2,7,8);                                       /* body */
+      cx.fillStyle=isNight?"#5a5a54":"#b0ac9e";cx.beginPath();cx.moveTo(-32,2);cx.lineTo(-26.5,-3);cx.lineTo(-21,2);cx.closePath();cx.fill(); /* cap */
+      cx.fillStyle=isNight?"#3a3a34":"#7a766a";cx.fillRect(-28,9,3,6);  /* post */
+      if(isNight){cx.fillStyle="rgba(255,200,110,.7)";cx.fillRect(-28.5,4,4,4);} /* lit */
+      break;}
+    case "oak":{
+      /* a Garry oak: gnarled trunk + broad irregular canopy */
+      const ph=(l.ph||0), s=1+0.12*Math.sin(ph*2.1);
+      cx.save();cx.scale(s,s);
+      cx.fillStyle="rgba(0,0,0,.16)";cx.beginPath();cx.ellipse(3,16,20,8,0,0,7);cx.fill();
+      cx.fillStyle=isNight?"#2a2018":"#5a4632";                     /* trunk */
+      cx.fillRect(-3,2,6,16);
+      cx.strokeStyle=isNight?"#2a2018":"#5a4632";cx.lineWidth=2.5;   /* a couple of boughs */
+      cx.beginPath();cx.moveTo(0,6);cx.lineTo(-8,-2);cx.moveTo(0,8);cx.lineTo(9,0);cx.stroke();
+      /* layered canopy */
+      const c1=isNight?"#1f3a24":"#3f7a42", c2=isNight?"#244529":"#4e9050";
+      for(const[ox,oy,orr,cc]of[[-10,-6,13,c1],[9,-8,12,c1],[0,-14,14,c2],[-4,-2,12,c2],[8,-2,10,c1]]){
+        cx.fillStyle=cc;cx.beginPath();cx.arc(ox,oy,orr,0,7);cx.fill();}
+      cx.restore();
+      break;}
+    case "swan":{
+      /* a mute swan with two cygnets gliding */
+      const ph=(l.ph||0), bob=Math.sin(state.t*1.2+ph)*1.2, gl=Math.sin(state.t*0.4+ph)*10;
+      cx.save();cx.translate(gl,bob);
+      cx.fillStyle="rgba(255,255,255,.25)";cx.beginPath();cx.ellipse(-14,4,20,5,0,0,7);cx.fill(); /* wake */
+      cx.fillStyle=isNight?"#c8ccd2":"#ffffff";cx.beginPath();cx.ellipse(0,0,15,8,0,0,7);cx.fill(); /* body */
+      cx.beginPath();cx.moveTo(10,-2);cx.quadraticCurveTo(20,-12,16,-18);cx.quadraticCurveTo(13,-12,8,-4);cx.closePath();cx.fill(); /* neck */
+      cx.fillStyle=isNight?"#b8bcc2":"#f4f4f6";cx.beginPath();cx.arc(16,-18,3,0,7);cx.fill(); /* head */
+      cx.fillStyle="#e8923a";cx.beginPath();cx.moveTo(18,-18);cx.lineTo(22,-17);cx.lineTo(18,-16);cx.closePath();cx.fill(); /* bill */
+      cx.fillStyle="#1a1a1a";cx.fillRect(15,-19,2,1.5);
+      /* two grey cygnets trailing */
+      cx.fillStyle=isNight?"#6a6e74":"#b8b0a4";
+      for(const[cx2,cy2]of[[-20,8],[-26,2]]){cx.beginPath();cx.ellipse(cx2,cy2,6,3.5,0,0,7);cx.fill();
+        cx.beginPath();cx.arc(cx2+5,cy2-3,2,0,7);cx.fill();}
+      cx.restore();
       break;}
     case "rower":{
       /* a rowing shell with oars sweeping — long thin boat on the Gorge */
@@ -2270,11 +2375,65 @@ function drawLandSprite(l,p,f){
       break;}
     case "tilli":{
       const w=130*sc;
-      cx.strokeStyle=isNight?"#3a3833":"#8a7a5c";cx.lineWidth=w*0.1;
-      cx.beginPath();cx.moveTo(x-w*0.5,y-w*0.06);cx.lineTo(x+w*0.5,y-w*0.06);cx.stroke();
-      cx.fillStyle=isNight?"rgba(160,200,230,.5)":"rgba(255,255,255,.7)";
-      for(let i=0;i<8;i++){const a=i*2.4+state.t*2,r=w*0.1+((i*37)%(w*0.2));
-        cx.beginPath();cx.arc(x+Math.cos(a)*r,y+w*0.16+Math.sin(a)*w*0.08,w*0.04,0,7);cx.fill();}
+      /* dark narrows + rocks */
+      cx.fillStyle=isNight?"#0c2030":"#1d4e63";cx.fillRect(x-w*0.5,y,w,w*0.34);
+      cx.fillStyle=isNight?"#2a2c30":"#5a5650";
+      for(const[rx,ry]of[[-0.3,0.18],[0.12,0.26],[0.32,0.14]]){cx.beginPath();cx.arc(x+rx*w,y+ry*w,w*0.05,0,7);cx.fill();}
+      /* churning whitewater */
+      cx.fillStyle=isNight?"rgba(180,210,235,.6)":"rgba(255,255,255,.85)";
+      for(let i=0;i<12;i++){const a=i*2.4+state.t*3,r=w*0.06+((i*37)%(w*0.22));
+        cx.beginPath();cx.arc(x+Math.cos(a)*r,y+w*0.18+Math.sin(a*1.3)*w*0.08,w*0.035,0,7);cx.fill();}
+      /* bridge deck + rail + piers */
+      cx.fillStyle=isNight?"#3a3833":"#8a7a5c";cx.fillRect(x-w*0.5,y-w*0.08,w,w*0.06);
+      cx.fillStyle=isNight?"#4a4840":"#a59478";cx.fillRect(x-w*0.5,y-w*0.11,w,w*0.02);
+      cx.fillStyle=isNight?"#2a2620":"#6a5a48";cx.fillRect(x-w*0.54,y-w*0.11,w*0.08,w*0.22);cx.fillRect(x+w*0.46,y-w*0.11,w*0.08,w*0.22);
+      break;}
+    case "school":{
+      const w=120*sc;
+      cx.fillStyle=isNight?"#4a4842":"#eceae0";cx.fillRect(x-w*0.34,y-w*0.24,w*0.68,w*0.48);
+      cx.fillStyle=isNight?"#caa84a":"#a9c4d6";
+      for(let r=0;r<2;r++)for(const wx of[-0.24,-0.08,0.1,0.24])cx.fillRect(x+wx*w,y-w*0.16+r*w*0.2,w*0.07,w*0.12);
+      cx.fillStyle=isNight?"#2a2620":"#6a4a32";cx.fillRect(x-w*0.05,y+w*0.08,w*0.12,w*0.16);
+      cx.fillStyle=isNight?"#2c2622":"#5a4a3a";
+      cx.beginPath();cx.moveTo(x-w*0.4,y-w*0.24);cx.lineTo(x-w*0.18,y-w*0.4);cx.lineTo(x+w*0.18,y-w*0.4);cx.lineTo(x+w*0.4,y-w*0.24);cx.closePath();cx.fill();
+      cx.fillStyle=isNight?"#4a4842":"#eceae0";cx.fillRect(x-w*0.06,y-w*0.52,w*0.12,w*0.14);
+      cx.fillStyle=isNight?"#2c2622":"#5a4a3a";cx.beginPath();cx.moveTo(x-w*0.08,y-w*0.52);cx.lineTo(x,y-w*0.6);cx.lineTo(x+w*0.08,y-w*0.52);cx.closePath();cx.fill();
+      break;}
+    case "boathouse":{
+      const w=150*sc;
+      cx.fillStyle=isNight?"#43403a":"#b0a48c";cx.fillRect(x-w*0.5,y-w*0.16,w,w*0.4);
+      cx.fillStyle=isNight?"#15140f":"#2a2620";
+      for(const bx of[-0.4,-0.12,0.18])cx.fillRect(x+bx*w,y-w*0.02,w*0.22,w*0.24);
+      const sc2=["#e8743a","#2a8cc9","#e2c23a"];
+      for(let i=0;i<3;i++){const bx=[-0.4,-0.12,0.18][i];cx.fillStyle=sc2[i];cx.fillRect(x+bx*w+w*0.02,y+w*0.06,w*0.2,w*0.03);}
+      cx.fillStyle=isNight?"#2c2622":"#6a5a44";
+      cx.beginPath();cx.moveTo(x-w*0.52,y-w*0.16);cx.lineTo(x,y-w*0.34);cx.lineTo(x+w*0.52,y-w*0.16);cx.closePath();cx.fill();
+      cx.fillStyle=isNight?"#1d4a3c":"#2e7d63";cx.fillRect(x-w*0.18,y-w*0.2,w*0.36,w*0.05);
+      break;}
+    case "torii":{
+      const w=110*sc;
+      cx.fillStyle=isNight?"#3a2420":"#8a3a2a";cx.beginPath();cx.arc(x+w*0.24,y-w*0.05,w*0.1,0,7);cx.fill(); /* maple */
+      cx.fillStyle=isNight?"#7a2820":"#c0392b";
+      cx.fillRect(x-w*0.15,y-w*0.2,w*0.04,w*0.28);cx.fillRect(x+w*0.11,y-w*0.2,w*0.04,w*0.28);
+      cx.fillRect(x-w*0.2,y-w*0.2,w*0.4,w*0.05);
+      cx.fillStyle=isNight?"#5a1d18":"#9a2c20";cx.fillRect(x-w*0.18,y-w*0.22,w*0.36,w*0.03);cx.fillRect(x-w*0.11,y-w*0.13,w*0.22,w*0.03);
+      cx.fillStyle=isNight?"#4a4a44":"#9a968a";cx.fillRect(x-w*0.28,y+w*0.02,w*0.07,w*0.08);
+      if(isNight){cx.fillStyle="rgba(255,200,110,.7)";cx.fillRect(x-w*0.27,y+w*0.04,w*0.04,w*0.04);}
+      break;}
+    case "oak":{
+      const w=110*sc, ph=(l.ph||0), s=1+0.12*Math.sin(ph*2.1);
+      cx.fillStyle=isNight?"#2a2018":"#5a4632";cx.fillRect(x-w*0.03,y-w*0.02,w*0.06,w*0.2);
+      const c1=isNight?"#1f3a24":"#3f7a42", c2=isNight?"#244529":"#4e9050";
+      for(const[ox,oy,orr,cc]of[[-0.1,-0.1,0.16,c1],[0.1,-0.12,0.15,c1],[0,-0.2,0.17,c2],[-0.05,-0.04,0.14,c2],[0.09,-0.04,0.12,c1]]){
+        cx.fillStyle=cc;cx.beginPath();cx.arc(x+ox*w,y-w*0.08+oy*w,orr*w*s,0,7);cx.fill();}
+      break;}
+    case "swan":{
+      const w=110*sc, ph=(l.ph||0);
+      cx.fillStyle=isNight?"#c8ccd2":"#ffffff";cx.beginPath();cx.ellipse(x,y,w*0.14,w*0.08,0,0,7);cx.fill();
+      cx.beginPath();cx.moveTo(x+w*0.1,y-w*0.02);cx.quadraticCurveTo(x+w*0.2,y-w*0.12,x+w*0.16,y-w*0.18);cx.quadraticCurveTo(x+w*0.13,y-w*0.12,x+w*0.08,y-w*0.04);cx.closePath();cx.fill();
+      cx.beginPath();cx.arc(x+w*0.16,y-w*0.18,w*0.03,0,7);cx.fill();
+      cx.fillStyle="#e8923a";cx.fillRect(x+w*0.18,y-w*0.19,w*0.04,w*0.015);
+      cx.fillStyle=isNight?"#6a6e74":"#b8b0a4";for(const cx2 of[-0.2,-0.27]){cx.beginPath();cx.ellipse(x+cx2*w,y+w*0.06,w*0.05,w*0.03,0,0,7);cx.fill();}
       break;}
     case "rower":{
       const w=120*sc, ph=(l.ph||0),sweep=Math.sin(state.t*2.4+ph)*0.5;
@@ -3395,7 +3554,7 @@ function endTitle(){
 buildTrack(false);
 renderGarage();
 startTitle();
-(function(){const b=document.getElementById("buildtag");if(b)b.textContent="engine ready · v34";})();
+(function(){const b=document.getElementById("buildtag");if(b)b.textContent="engine ready · v35";})();
 let last=performance.now();
 let frameErrs=0;
 function loop(now){
