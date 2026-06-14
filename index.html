@@ -209,7 +209,7 @@
 <div class="tc" id="tc-boost">&#9889;</div>
 <div id="kbd-legend">
   <b>V</b> view &nbsp; <b>P</b> pit &nbsp; <b>R</b> mirrors &nbsp; <b>N</b> music &nbsp; <b>M</b> mute
-  &nbsp;<span style="opacity:.5">·</span>&nbsp; <span class="vtag">v39</span>
+  &nbsp;<span style="opacity:.5">·</span>&nbsp; <span class="vtag">v40</span>
 </div>
 <div id="tc-strip">
   <div class="tcbtn" id="tc-view"><span class="ic">◱</span><span class="lb">VIEW</span></div>
@@ -432,6 +432,15 @@ const CIRCUITS={
     [2480,1980],[2300,2420],[1960,2440],[1740,2180],[1860,1880],[1700,1760],
     [1500,1820],[1320,2040],[1380,2320],[1180,2480],[900,2440],[760,2220],
     [880,1960],[700,1820],[560,1600],[640,1360],[820,1480]
+  ]},
+  /* The Peninsula Run — the drive up to Sidney: long seafront straight, a sweep past the airport, rural bends */
+  sidney:{name:"Peninsula Run", blurb:"The open drive up to Sidney \u2014 seafront straights past the airport and the ferries.",
+    land:"sidney", water:"sidney",
+    ctrl:[
+    [640,2080],[1120,2200],[1640,2240],[2120,2200],[2460,2020],[2560,1680],
+    [2420,1380],[2480,1060],[2600,760],[2460,470],[2080,400],[1680,460],
+    [1560,760],[1700,1040],[1520,1260],[1160,1240],[940,1020],[1000,700],
+    [860,460],[540,500],[420,820],[520,1160],[760,1380],[760,1700],[640,2080]
   ]}
 };
 let CTRL=CIRCUITS.harbour.ctrl;
@@ -928,8 +937,8 @@ function startRace(){
   }
   const _circ = CIRCUITS[meta.circuit]||CIRCUITS.harbour;
   CTRL = _circ.ctrl;
-  LAND  = (_circ.land==="gorge") ? LAND_GORGE  : LAND_HARBOUR;
-  WATER = (_circ.water==="gorge")? WATER_GORGE : WATER_HARBOUR;
+  LAND  = _circ.land==="gorge" ? LAND_GORGE : _circ.land==="sidney" ? LAND_SIDNEY : LAND_HARBOUR;
+  WATER = _circ.water==="gorge"? WATER_GORGE : _circ.water==="sidney"? WATER_SIDNEY : WATER_HARBOUR;
   buildTrack(ev.rev);
   skids=[];sparks=[];dust=[];replayBuf=[];replayAccum=0;
   dryLine=new Float32Array(N);   /* 0 = wet, 1 = swept dry; starts wet in the wet */
@@ -1350,6 +1359,13 @@ const WATER_GORGE=[
   /* a side arm reaching east toward the Selkirk basin */
   [[1760,1960],[2120,1900],[2360,2060],[2300,2300],[2000,2320],[1820,2160]],
 ];
+const WATER_SIDNEY=[
+  /* the Salish Sea along the Sidney seafront (the open water the loop hugs on the lower right) */
+  [[1640,1700],[2160,1640],[2420,1760],[2480,2040],[2300,2320],[1860,2380],
+   [1500,2300],[1380,2040],[1480,1820]],
+  /* a northern inlet toward Swartz Bay (where the ferries berth) */
+  [[2520,560],[2700,620],[2720,940],[2560,1120],[2440,920],[2480,700]],
+];
 let WATER=WATER_HARBOUR;
 function drawWater(t){
   for(const poly of WATER){
@@ -1434,6 +1450,36 @@ const LAND_GORGE=[
   {x:1500,y:760, t:"flyby",  label:"",sea:true,ph:0.0, spd:0.09, dir:1, alt:160},
   {x:1900,y:1900,t:"flyby",  label:"",sea:true,ph:0.5, spd:0.11, dir:-1,alt:130},
 ];
+/* ---- The Peninsula: Sidney, the airport (YYJ) + the ferries ---- */
+const LAND_SIDNEY=[
+  /* the airport — the centerpiece of the run */
+  {x:1226,y:1061,t:"terminal",label:"Victoria Int'l Airport"},
+  {x:1150,y:1104,t:"airtower",label:""},                     /* the control tower */
+  {x:1858,y:1047,t:"airliner",label:"",ph:0.0},              /* a parked jet at the apron */
+  {x:1180,y:760, t:"depart",  label:"",ph:0.0},              /* a departing jet climbing out */
+  /* Sidney by the sea */
+  {x:1920,y:2043,t:"pier",   label:"Sidney Pier",sea:true},  /* the fishing pier into the sea */
+  {x:2293,y:1686,t:"shaw",   label:"Shaw Centre"},           /* the Salish Sea aquarium */
+  /* Swartz Bay ferries (north inlet) */
+  {x:2394,y:617,t:"ferryt", label:"Swartz Bay"},            /* the BC Ferries terminal */
+  {x:2373,y:646,t:"ferry",  label:"",sea:true,ph:0.0},      /* a ferry on the water */
+  /* the rural Saanich Peninsula */
+  {x:1100,y:908,t:"barn",   label:"Peninsula Farm"},        /* a red barn + silo */
+  {x:1182,y:1787,t:"vineyard",label:"Saanich Vineyard"},     /* rows of vines */
+  {x:366,y:1520,t:"butchart",label:"Butchart Gardens"},     /* the famous floral gardens */
+  /* peninsula greenery + life */
+  {x:1082,y:996,t:"oak",    label:"",ph:0.0},
+  {x:1232,y:1711,t:"oak",    label:"",ph:1.4},
+  {x:2226,y:1324,t:"oak",    label:"",ph:2.7},
+  {x:2347,y:611,t:"oak",    label:"",ph:3.9},
+  {x:1665,y:1774,t:"gull",   label:"",sea:true,ph:0.0},
+  {x:2034,y:2076,t:"gull",   label:"",sea:true,ph:1.7},
+  {x:2290,y:1990,t:"sailboat",label:"",sea:true,ph:0.0},
+  {x:1754,y:2103,t:"sailboat",label:"",sea:true,ph:2.2},
+  /* a float plane working the strait + a gull flock overhead */
+  {x:2050,y:560, t:"flyby",  label:"",sea:true,dir:1,spd:0.05,ph:0.0,alt:150},
+  {x:900, y:2000,t:"flyby",  label:"",sea:true,dir:-1,spd:0.07,ph:2.5,alt:130},
+];
 let LAND=LAND_HARBOUR;
 function legLights(c,x,y,w,h,domeR){ // the famous outline of lights
   c.fillStyle="#ffe6a0";
@@ -1449,6 +1495,156 @@ function drawLandTop(l,camX,camY){
   const x=l.x-camX, y=l.y-camY+bob;
   cx.save();cx.translate(x,y);
   switch(l.t){
+    case "terminal":{
+      /* YYJ terminal: long low glass-and-steel building with a curved roof + apron markings */
+      cx.fillStyle="rgba(0,0,0,.18)";cx.beginPath();cx.ellipse(4,8,70,34,0,0,7);cx.fill();
+      /* apron */
+      cx.fillStyle=isNight?"#23252a":"#43464c";cx.fillRect(-66,14,132,30);
+      cx.strokeStyle=isNight?"#5a5d22":"#c8b84a";cx.lineWidth=2;cx.setLineDash([8,6]);
+      cx.beginPath();cx.moveTo(-60,29);cx.lineTo(60,29);cx.stroke();cx.setLineDash([]);
+      /* terminal block */
+      cx.fillStyle=isNight?"#33363e":"#cfd4dc";cx.fillRect(-60,-22,120,38);
+      cx.fillStyle=isNight?"#2a2d34":"#b6bcc6";cx.fillRect(-60,-22,120,6);     /* curved roof band */
+      /* glass frontage */
+      cx.fillStyle=isNight?"#1c3a4a":"#7fb4cc";
+      for(let i=0;i<22;i++)cx.fillRect(-56+i*5.2,-12,3.4,24);
+      /* jet bridges reaching to the apron */
+      cx.fillStyle=isNight?"#3a3d44":"#9aa0aa";
+      for(const bx of[-34,2,34]){cx.fillRect(bx-3,12,6,8);}
+      /* roof signage */
+      cx.fillStyle=isNight?"#2a4a6a":"#2e6da4";cx.fillRect(-20,-26,40,5);
+      if(isNight){cx.fillStyle="rgba(255,228,150,.5)";cx.fillRect(-56,-10,112,3);}
+      break;}
+    case "airtower":{
+      /* the control tower: tapering shaft + a glass cab + roof mast */
+      cx.fillStyle="rgba(0,0,0,.2)";cx.beginPath();cx.ellipse(2,6,16,10,0,0,7);cx.fill();
+      cx.fillStyle=isNight?"#3a3d44":"#c4c8d0";                 /* shaft */
+      cx.beginPath();cx.moveTo(-7,8);cx.lineTo(-4,-30);cx.lineTo(4,-30);cx.lineTo(7,8);cx.closePath();cx.fill();
+      cx.fillStyle=isNight?"#2a2d34":"#a6acb6";cx.fillRect(2,-30,5,38);   /* shaded edge */
+      /* the cab (wider, glass) */
+      cx.fillStyle=isNight?"#1c3a4a":"#6fa8c4";cx.beginPath();cx.moveTo(-12,-30);cx.lineTo(-9,-40);cx.lineTo(9,-40);cx.lineTo(12,-30);cx.closePath();cx.fill();
+      cx.fillStyle=isNight?"#2a2d34":"#8a9098";cx.fillRect(-13,-42,26,3);  /* cab roof */
+      cx.fillStyle="#9a9488";cx.fillRect(-0.8,-52,1.6,10);                /* mast */
+      if(isNight){cx.fillStyle="rgba(120,200,255,.7)";cx.fillRect(-10,-39,20,7);
+        cx.fillStyle="#ff4a4a";cx.beginPath();cx.arc(0,-52,2,0,7);cx.fill();}  /* red beacon */
+      break;}
+    case "airliner":{
+      /* a parked narrow-body jet at the apron, nose to the terminal */
+      const c=isNight?"#cdd2da":"#f4f6fa", cD=isNight?"#aab0ba":"#d6dae2";
+      cx.fillStyle="rgba(0,0,0,.16)";cx.beginPath();cx.ellipse(3,4,44,12,0,0,7);cx.fill();
+      cx.fillStyle=c;cx.beginPath();cx.ellipse(0,0,42,9,0,0,7);cx.fill();        /* fuselage */
+      cx.fillStyle=cD;cx.beginPath();cx.moveTo(-42,0);cx.lineTo(-30,-22);cx.lineTo(-22,-22);cx.lineTo(-10,0);cx.closePath();cx.fill(); /* swept wing */
+      cx.beginPath();cx.moveTo(-42,0);cx.lineTo(-30,22);cx.lineTo(-22,22);cx.lineTo(-10,0);cx.closePath();cx.fill();
+      cx.fillStyle=c;cx.beginPath();cx.moveTo(36,0);cx.lineTo(44,-12);cx.lineTo(40,0);cx.closePath();cx.fill(); /* tail fin */
+      cx.fillStyle=isNight?"#2a4a6a":"#2e6da4";cx.fillRect(-8,-2,30,4);          /* cheatline */
+      cx.fillStyle=isNight?"#1c3a4a":"#9fb8c8";for(let i=0;i<8;i++)cx.fillRect(6+i*4,-1.5,2,3); /* windows */
+      break;}
+    case "depart":{
+      /* a jet climbing out on departure — banked, contrail behind */
+      const cyc=(state.t*0.05+(l.ph||0))%1;
+      const cl=isNight?"#cdd2da":"#f4f6fa";
+      cx.save();cx.rotate(-0.5);
+      cx.strokeStyle="rgba(220,228,235,.4)";cx.lineWidth=4;cx.beginPath();cx.moveTo(-70,18);cx.lineTo(-6,2);cx.stroke(); /* contrail */
+      cx.fillStyle=cl;cx.beginPath();cx.ellipse(0,0,30,7,0,0,7);cx.fill();
+      cx.fillStyle=isNight?"#aab0ba":"#d6dae2";cx.beginPath();cx.moveTo(-6,0);cx.lineTo(-22,-16);cx.lineTo(-14,-16);cx.lineTo(2,0);cx.closePath();cx.fill();
+      cx.beginPath();cx.moveTo(-6,0);cx.lineTo(2,14);cx.lineTo(8,14);cx.lineTo(6,0);cx.closePath();cx.fill();
+      cx.fillStyle=isNight?"#2a4a6a":"#2e6da4";cx.fillRect(-2,-1.5,22,3);
+      cx.restore();
+      break;}
+    case "pier":{
+      /* Sidney fishing pier: a long timber jetty out over the water with a pavilion at the end */
+      cx.fillStyle=isNight?"#3a352a":"#9a8458";cx.fillRect(-8,-6,16,70);        /* deck */
+      cx.fillStyle=isNight?"#2a2620":"#7a6848";for(let dy=-4;dy<64;dy+=8)cx.fillRect(-8,dy,16,2);
+      cx.fillStyle=isNight?"#2a2620":"#6a5840";for(let py=2;py<60;py+=14){cx.fillRect(-9,py,3,8);cx.fillRect(6,py,3,8);} /* pilings */
+      cx.fillStyle=isNight?"#3a4148":"#5a6470";cx.fillRect(-14,56,28,16);       /* end pavilion */
+      cx.fillStyle=isNight?"#2c2622":"#3a8f74";cx.beginPath();cx.moveTo(-16,56);cx.lineTo(0,48);cx.lineTo(16,56);cx.closePath();cx.fill();
+      break;}
+    case "shaw":{
+      /* Shaw Centre for the Salish Sea: a modern waterfront building w/ a wave roof */
+      cx.fillStyle="rgba(0,0,0,.16)";cx.beginPath();cx.ellipse(3,5,36,22,0,0,7);cx.fill();
+      cx.fillStyle=isNight?"#2e3640":"#5a7a8c";cx.fillRect(-30,-14,60,30);
+      cx.fillStyle=isNight?"#1c3a4a":"#8fc0d4";for(let i=0;i<10;i++)cx.fillRect(-26+i*5.4,-8,3.4,20); /* glass */
+      cx.fillStyle=isNight?"#3a4750":"#aebfc8";cx.beginPath();cx.moveTo(-32,-14);   /* wave roof */
+      cx.quadraticCurveTo(-10,-26,0,-16);cx.quadraticCurveTo(12,-26,32,-14);cx.lineTo(32,-10);cx.lineTo(-32,-10);cx.closePath();cx.fill();
+      break;}
+    case "ferryt":{
+      /* Swartz Bay terminal: ramps + a terminal building + loading lanes */
+      cx.fillStyle=isNight?"#23252a":"#45484e";cx.fillRect(-40,-6,80,46);       /* paved holding lanes */
+      cx.strokeStyle=isNight?"#4a4d22":"#c8b84a";cx.lineWidth=1.6;
+      for(let lx=-32;lx<=32;lx+=16){cx.beginPath();cx.moveTo(lx,-4);cx.lineTo(lx,38);cx.stroke();}
+      cx.fillStyle=isNight?"#33363e":"#cfd4dc";cx.fillRect(-30,-22,60,18);      /* terminal */
+      cx.fillStyle=isNight?"#2a4a6a":"#2e6da4";cx.fillRect(-12,-25,24,4);
+      cx.fillStyle=isNight?"#3a3d44":"#8a9098";                                  /* the loading ramps reaching to the water */
+      cx.beginPath();cx.moveTo(-18,40);cx.lineTo(-6,40);cx.lineTo(-10,58);cx.lineTo(-22,58);cx.closePath();cx.fill();
+      cx.beginPath();cx.moveTo(8,40);cx.lineTo(20,40);cx.lineTo(24,58);cx.lineTo(12,58);cx.closePath();cx.fill();
+      break;}
+    case "ferry":{
+      /* a BC Ferries vessel: long white hull, blue band, superstructure + funnel */
+      const bob=Math.sin(state.t*0.7+(l.ph||0))*1.5;
+      cx.save();cx.translate(0,bob);
+      cx.fillStyle="rgba(0,0,0,.14)";cx.beginPath();cx.ellipse(4,8,66,16,0,0,7);cx.fill();
+      cx.fillStyle=isNight?"#3a4150":"#f2f4f7";cx.beginPath();             /* hull */
+      cx.moveTo(-64,4);cx.lineTo(-56,-8);cx.lineTo(56,-8);cx.lineTo(64,4);cx.lineTo(58,12);cx.lineTo(-58,12);cx.closePath();cx.fill();
+      cx.fillStyle="#1a4e8a";cx.fillRect(-58,2,116,4);                     /* blue band */
+      cx.fillStyle=isNight?"#4a5160":"#dfe3e9";cx.fillRect(-44,-20,88,12); /* superstructure */
+      cx.fillStyle=isNight?"#1c3a4a":"#9fb8c8";for(let i=0;i<18;i++)cx.fillRect(-42+i*4.8,-17,2.6,6); /* windows */
+      cx.fillStyle="#d8d2c4";cx.fillRect(28,-30,12,12);                    /* funnel */
+      cx.fillStyle="#1a4e8a";cx.fillRect(28,-30,12,4);
+      cx.restore();
+      break;}
+    case "barn":{
+      /* a red peninsula barn with a gambrel roof + a silo */
+      cx.fillStyle="rgba(0,0,0,.18)";cx.beginPath();cx.ellipse(3,6,38,22,0,0,7);cx.fill();
+      cx.fillStyle=isNight?"#5a2420":"#a83a2e";cx.fillRect(-28,-12,52,30);     /* barn body */
+      cx.fillStyle=isNight?"#3a1814":"#7a2820";cx.fillRect(20,-12,4,30);
+      cx.fillStyle=isNight?"#2c2622":"#5a4a3a";                                /* gambrel roof */
+      cx.beginPath();cx.moveTo(-30,-12);cx.lineTo(-18,-26);cx.lineTo(0,-32);cx.lineTo(18,-26);cx.lineTo(30,-12);cx.closePath();cx.fill();
+      cx.fillStyle=isNight?"#1a1410":"#3a2a1e";cx.fillRect(-8,2,16,16);        /* barn door */
+      cx.fillStyle="#e8e2d0";cx.fillRect(-7,3,14,2);cx.fillRect(-1,3,2,15);    /* white X trim */
+      /* silo */
+      cx.fillStyle=isNight?"#4a4d52":"#b8bcc2";cx.fillRect(28,-20,16,38);
+      cx.fillStyle=isNight?"#3a3d42":"#9aa0a6";cx.beginPath();cx.arc(36,-20,8,Math.PI,0);cx.fill();
+      break;}
+    case "vineyard":{
+      /* rows of grapevines on the peninsula */
+      cx.fillStyle=isNight?"#2a3a2a":"#6a8a4a";cx.fillRect(-34,-22,68,46);     /* field */
+      cx.strokeStyle=isNight?"#1e2a1a":"#3e5a2c";cx.lineWidth=3;
+      for(let ry=-16;ry<=18;ry+=8){cx.beginPath();cx.moveTo(-30,ry);cx.lineTo(30,ry);cx.stroke();}
+      cx.fillStyle=isNight?"#243524":"#4e7a36";                                /* vine clumps */
+      for(let ry=-16;ry<=18;ry+=8)for(let rx=-28;rx<=28;rx+=10)cx.fillRect(rx-2,ry-2,4,4);
+      break;}
+    case "butchart":{
+      /* Butchart Gardens: a riot of flowerbeds + a fountain */
+      cx.fillStyle=isNight?"#1f3a24":"#3f7a42";cx.beginPath();cx.ellipse(0,0,36,26,0,0,7);cx.fill();
+      const blooms=isNight?["#6a3a4a","#5a4a6a","#6a5a2a"]:["#e85a7a","#f0a0c0","#f0d050","#e87a3a","#b070d0"];
+      for(let i=0;i<26;i++){const a=i*1.7,r=6+((i*53)%26);
+        cx.fillStyle=blooms[i%blooms.length];cx.beginPath();cx.arc(Math.cos(a)*r,Math.sin(a)*r*0.72,3,0,7);cx.fill();}
+      cx.fillStyle=isNight?"#3a4750":"#aebfc8";cx.beginPath();cx.arc(0,0,5,0,7);cx.fill();   /* fountain */
+      cx.fillStyle=isNight?"#6a8aa0":"#cfe6f2";cx.beginPath();cx.arc(0,0,2.4,0,7);cx.fill();
+      break;}
+    case "gull":{
+      /* a gull bobbing on the water */
+      const bob=Math.sin(state.t*1.6+(l.x))*1.4;
+      cx.save();cx.translate(0,bob);
+      cx.fillStyle="rgba(255,255,255,.25)";cx.beginPath();cx.ellipse(-6,3,12,3,0,0,7);cx.fill();
+      cx.fillStyle=isNight?"#c8ccd2":"#fbfbfd";cx.beginPath();cx.ellipse(0,0,8,4,0,0,7);cx.fill();
+      cx.fillStyle=isNight?"#b8bcc2":"#eef0f2";cx.beginPath();cx.arc(6,-3,2.4,0,7);cx.fill();
+      cx.fillStyle="#e8a83a";cx.fillRect(8,-3,3,1.4);
+      cx.fillStyle="#9a9aa2";cx.fillRect(-6,-2,4,2);
+      cx.restore();
+      break;}
+    case "sailboat":{
+      /* a sailboat heeling on the strait */
+      const bob=Math.sin(state.t*0.9+(l.ph||0))*2, heel=Math.sin(state.t*0.5+(l.ph||0))*0.06;
+      cx.save();cx.translate(0,bob);cx.rotate(heel);
+      cx.fillStyle="rgba(0,0,0,.12)";cx.beginPath();cx.ellipse(2,5,20,5,0,0,7);cx.fill();
+      cx.fillStyle=isNight?"#3a4150":"#e8eaee";cx.beginPath();              /* hull */
+      cx.moveTo(-18,0);cx.quadraticCurveTo(0,8,18,0);cx.lineTo(14,4);cx.quadraticCurveTo(0,9,-14,4);cx.closePath();cx.fill();
+      cx.fillStyle="#9a9488";cx.fillRect(-1,-34,2,34);                      /* mast */
+      cx.fillStyle=isNight?"#c8ccd2":"#fdfdff";cx.beginPath();cx.moveTo(1,-32);cx.lineTo(1,-2);cx.lineTo(16,-2);cx.closePath();cx.fill(); /* mainsail */
+      cx.fillStyle=isNight?"#b8bcc2":"#eef0f4";cx.beginPath();cx.moveTo(-1,-30);cx.lineTo(-1,-4);cx.lineTo(-12,-4);cx.closePath();cx.fill(); /* jib */
+      cx.restore();
+      break;}
     case "leg":{
       const stone=isNight?"#544f46":"#b8b2a4", stoneD=isNight?"#444038":"#9a917d";
       cx.fillStyle=stone;cx.fillRect(-150,-64,300,128);
@@ -2019,6 +2215,117 @@ function drawLandSprite(l,p,f){
   const sc=f/p.z, x=p.x, y=p.y;
   cx.save();
   switch(l.t){
+    case "terminal":{
+      const w=180*sc;
+      cx.fillStyle=isNight?"#23252a":"#43464c";cx.fillRect(x-w*0.5,y+w*0.02,w,w*0.16);   /* apron */
+      cx.fillStyle=isNight?"#33363e":"#cfd4dc";cx.fillRect(x-w*0.46,y-w*0.18,w*0.92,w*0.22); /* block */
+      cx.fillStyle=isNight?"#2a2d34":"#b6bcc6";cx.fillRect(x-w*0.46,y-w*0.18,w*0.92,w*0.04);
+      cx.fillStyle=isNight?"#1c3a4a":"#7fb4cc";for(let i=0;i<20;i++)cx.fillRect(x-w*0.43+i*w*0.044,y-w*0.1,w*0.03,w*0.12);
+      cx.fillStyle=isNight?"#2a4a6a":"#2e6da4";cx.fillRect(x-w*0.16,y-w*0.21,w*0.32,w*0.035);
+      if(isNight){cx.fillStyle="rgba(255,228,150,.5)";cx.fillRect(x-w*0.43,y-w*0.09,w*0.86,w*0.02);}
+      break;}
+    case "airtower":{
+      const w=120*sc;
+      cx.fillStyle=isNight?"#3a3d44":"#c4c8d0";cx.beginPath();
+      cx.moveTo(x-w*0.06,y+w*0.06);cx.lineTo(x-w*0.035,y-w*0.5);cx.lineTo(x+w*0.035,y-w*0.5);cx.lineTo(x+w*0.06,y+w*0.06);cx.closePath();cx.fill();
+      cx.fillStyle=isNight?"#1c3a4a":"#6fa8c4";cx.beginPath();
+      cx.moveTo(x-w*0.1,y-w*0.5);cx.lineTo(x-w*0.075,y-w*0.64);cx.lineTo(x+w*0.075,y-w*0.64);cx.lineTo(x+w*0.1,y-w*0.5);cx.closePath();cx.fill();
+      cx.fillStyle=isNight?"#2a2d34":"#8a9098";cx.fillRect(x-w*0.11,y-w*0.67,w*0.22,w*0.04);
+      cx.fillStyle="#9a9488";cx.fillRect(x-w*0.008,y-w*0.82,w*0.016,w*0.15);
+      if(isNight){cx.fillStyle="rgba(120,200,255,.7)";cx.fillRect(x-w*0.08,y-w*0.63,w*0.16,w*0.1);
+        cx.fillStyle="#ff4a4a";cx.beginPath();cx.arc(x,y-w*0.82,w*0.02,0,7);cx.fill();}
+      break;}
+    case "airliner":{
+      const w=150*sc, c=isNight?"#cdd2da":"#f4f6fa", cD=isNight?"#aab0ba":"#d6dae2";
+      cx.fillStyle=c;cx.beginPath();cx.ellipse(x,y,w*0.42,w*0.09,0,0,7);cx.fill();
+      cx.fillStyle=cD;cx.beginPath();cx.moveTo(x-w*0.42,y);cx.lineTo(x-w*0.28,y-w*0.2);cx.lineTo(x-w*0.18,y-w*0.2);cx.lineTo(x-w*0.08,y);cx.closePath();cx.fill();
+      cx.fillStyle=c;cx.beginPath();cx.moveTo(x+w*0.34,y);cx.lineTo(x+w*0.44,y-w*0.16);cx.lineTo(x+w*0.4,y);cx.closePath();cx.fill();
+      cx.fillStyle=isNight?"#2a4a6a":"#2e6da4";cx.fillRect(x-w*0.08,y-w*0.02,w*0.3,w*0.04);
+      cx.fillStyle=isNight?"#1c3a4a":"#9fb8c8";for(let i=0;i<8;i++)cx.fillRect(x+w*0.06+i*w*0.04,y-w*0.015,w*0.02,w*0.03);
+      break;}
+    case "depart":{
+      const w=120*sc, cl=isNight?"#cdd2da":"#f4f6fa";
+      cx.save();cx.translate(x,y);cx.rotate(-0.5);
+      cx.strokeStyle="rgba(220,228,235,.4)";cx.lineWidth=w*0.035;cx.beginPath();cx.moveTo(-w*0.6,w*0.16);cx.lineTo(-w*0.05,w*0.02);cx.stroke();
+      cx.fillStyle=cl;cx.beginPath();cx.ellipse(0,0,w*0.26,w*0.06,0,0,7);cx.fill();
+      cx.fillStyle=isNight?"#aab0ba":"#d6dae2";cx.beginPath();cx.moveTo(-w*0.05,0);cx.lineTo(-w*0.2,-w*0.14);cx.lineTo(-w*0.12,-w*0.14);cx.lineTo(w*0.02,0);cx.closePath();cx.fill();
+      cx.fillStyle=isNight?"#2a4a6a":"#2e6da4";cx.fillRect(-w*0.02,-w*0.015,w*0.2,w*0.03);
+      cx.restore();
+      break;}
+    case "pier":{
+      const w=150*sc;
+      cx.fillStyle=isNight?"#3a352a":"#9a8458";cx.fillRect(x-w*0.5,y-w*0.04,w*0.9,w*0.1);  /* deck receding */
+      cx.fillStyle=isNight?"#2a2620":"#6a5840";for(let i=0;i<8;i++){const px=x-w*0.46+i*w*0.11;cx.fillRect(px,y+w*0.04,w*0.02,w*0.12);}
+      cx.fillStyle=isNight?"#3a4148":"#5a6470";cx.fillRect(x+w*0.34,y-w*0.12,w*0.18,w*0.16);
+      cx.fillStyle=isNight?"#2c2622":"#3a8f74";cx.beginPath();cx.moveTo(x+w*0.32,y-w*0.12);cx.lineTo(x+w*0.43,y-w*0.2);cx.lineTo(x+w*0.54,y-w*0.12);cx.closePath();cx.fill();
+      break;}
+    case "shaw":{
+      const w=130*sc;
+      cx.fillStyle=isNight?"#2e3640":"#5a7a8c";cx.fillRect(x-w*0.34,y-w*0.14,w*0.68,w*0.3);
+      cx.fillStyle=isNight?"#1c3a4a":"#8fc0d4";for(let i=0;i<10;i++)cx.fillRect(x-w*0.3+i*w*0.062,y-w*0.08,w*0.04,w*0.2);
+      cx.fillStyle=isNight?"#3a4750":"#aebfc8";cx.beginPath();cx.moveTo(x-w*0.36,y-w*0.14);
+      cx.quadraticCurveTo(x-w*0.1,y-w*0.28,x,y-w*0.17);cx.quadraticCurveTo(x+w*0.12,y-w*0.28,x+w*0.36,y-w*0.14);cx.lineTo(x+w*0.36,y-w*0.1);cx.lineTo(x-w*0.36,y-w*0.1);cx.closePath();cx.fill();
+      break;}
+    case "ferryt":{
+      const w=160*sc;
+      cx.fillStyle=isNight?"#23252a":"#45484e";cx.fillRect(x-w*0.42,y-w*0.04,w*0.84,w*0.26);
+      cx.fillStyle=isNight?"#33363e":"#cfd4dc";cx.fillRect(x-w*0.3,y-w*0.2,w*0.6,w*0.16);
+      cx.fillStyle=isNight?"#2a4a6a":"#2e6da4";cx.fillRect(x-w*0.12,y-w*0.23,w*0.24,w*0.035);
+      cx.fillStyle=isNight?"#3a3d44":"#8a9098";cx.fillRect(x-w*0.2,y+w*0.18,w*0.12,w*0.1);cx.fillRect(x+w*0.08,y+w*0.18,w*0.12,w*0.1);
+      break;}
+    case "ferry":{
+      const w=240*sc, bob=Math.sin(state.t*0.7+(l.ph||0))*w*0.01;
+      cx.save();cx.translate(0,bob);
+      cx.fillStyle=isNight?"#3a4150":"#f2f4f7";cx.beginPath();
+      cx.moveTo(x-w*0.5,y+w*0.02),cx.lineTo(x-w*0.44,y-w*0.04),cx.lineTo(x+w*0.44,y-w*0.04),cx.lineTo(x+w*0.5,y+w*0.02),cx.lineTo(x+w*0.45,y+w*0.06),cx.lineTo(x-w*0.45,y+w*0.06);cx.closePath();cx.fill();
+      cx.fillStyle="#1a4e8a";cx.fillRect(x-w*0.45,y,w*0.9,w*0.02);
+      cx.fillStyle=isNight?"#4a5160":"#dfe3e9";cx.fillRect(x-w*0.34,y-w*0.1,w*0.68,w*0.06);
+      cx.fillStyle=isNight?"#1c3a4a":"#9fb8c8";for(let i=0;i<18;i++)cx.fillRect(x-w*0.32+i*w*0.037,y-w*0.085,w*0.02,w*0.03);
+      cx.fillStyle="#d8d2c4";cx.fillRect(x+w*0.2,y-w*0.15,w*0.05,w*0.06);
+      cx.fillStyle="#1a4e8a";cx.fillRect(x+w*0.2,y-w*0.15,w*0.05,w*0.02);
+      cx.restore();
+      break;}
+    case "barn":{
+      const w=120*sc;
+      cx.fillStyle=isNight?"#5a2420":"#a83a2e";cx.fillRect(x-w*0.28,y-w*0.1,w*0.5,w*0.32);
+      cx.fillStyle=isNight?"#2c2622":"#5a4a3a";cx.beginPath();
+      cx.moveTo(x-w*0.3,y-w*0.1);cx.lineTo(x-w*0.18,y-w*0.26);cx.lineTo(x,y-w*0.32);cx.lineTo(x+w*0.18,y-w*0.26);cx.lineTo(x+w*0.24,y-w*0.1);cx.closePath();cx.fill();
+      cx.fillStyle=isNight?"#1a1410":"#3a2a1e";cx.fillRect(x-w*0.08,y+w*0.04,w*0.16,w*0.18);
+      cx.fillStyle="#e8e2d0";cx.fillRect(x-w*0.07,y+w*0.05,w*0.14,w*0.02);cx.fillRect(x-w*0.01,y+w*0.05,w*0.02,w*0.16);
+      cx.fillStyle=isNight?"#4a4d52":"#b8bcc2";cx.fillRect(x+w*0.26,y-w*0.18,w*0.14,w*0.4);
+      cx.fillStyle=isNight?"#3a3d42":"#9aa0a6";cx.beginPath();cx.arc(x+w*0.33,y-w*0.18,w*0.07,Math.PI,0);cx.fill();
+      break;}
+    case "vineyard":{
+      const w=120*sc;
+      cx.fillStyle=isNight?"#2a3a2a":"#6a8a4a";cx.fillRect(x-w*0.34,y-w*0.06,w*0.68,w*0.28);
+      cx.strokeStyle=isNight?"#1e2a1a":"#3e5a2c";cx.lineWidth=w*0.018;
+      for(let r=0;r<4;r++){const ry=y+w*0.0+r*w*0.06;cx.beginPath();cx.moveTo(x-w*0.3,ry);cx.lineTo(x+w*0.3,ry);cx.stroke();}
+      cx.fillStyle=isNight?"#243524":"#4e7a36";for(let r=0;r<4;r++)for(let c=0;c<7;c++)cx.fillRect(x-w*0.28+c*w*0.09,y+r*w*0.06-w*0.01,w*0.03,w*0.03);
+      break;}
+    case "butchart":{
+      const w=120*sc;
+      cx.fillStyle=isNight?"#1f3a24":"#3f7a42";cx.beginPath();cx.ellipse(x,y+w*0.04,w*0.34,w*0.16,0,0,7);cx.fill();
+      const blooms=isNight?["#6a3a4a","#5a4a6a","#6a5a2a"]:["#e85a7a","#f0a0c0","#f0d050","#e87a3a","#b070d0"];
+      for(let i=0;i<22;i++){const a=i*1.7,r=w*0.05+((i*53)%(w*0.22));
+        cx.fillStyle=blooms[i%blooms.length];cx.beginPath();cx.arc(x+Math.cos(a)*r,y+w*0.04+Math.sin(a)*r*0.5,w*0.025,0,7);cx.fill();}
+      break;}
+    case "gull":{
+      const w=90*sc, bob=Math.sin(state.t*1.6+l.x)*w*0.015;
+      cx.save();cx.translate(0,bob);
+      cx.fillStyle=isNight?"#c8ccd2":"#fbfbfd";cx.beginPath();cx.ellipse(x,y,w*0.09,w*0.045,0,0,7);cx.fill();
+      cx.fillStyle=isNight?"#b8bcc2":"#eef0f2";cx.beginPath();cx.arc(x+w*0.07,y-w*0.03,w*0.028,0,7);cx.fill();
+      cx.fillStyle="#e8a83a";cx.fillRect(x+w*0.09,y-w*0.03,w*0.03,w*0.014);
+      cx.restore();
+      break;}
+    case "sailboat":{
+      const w=130*sc, bob=Math.sin(state.t*0.9+(l.ph||0))*w*0.015, heel=Math.sin(state.t*0.5+(l.ph||0))*0.06;
+      cx.save();cx.translate(x,y+bob);cx.rotate(heel);
+      cx.fillStyle=isNight?"#3a4150":"#e8eaee";cx.beginPath();cx.moveTo(-w*0.14,0);cx.quadraticCurveTo(0,w*0.06,w*0.14,0);cx.lineTo(w*0.1,w*0.03);cx.quadraticCurveTo(0,w*0.07,-w*0.1,w*0.03);cx.closePath();cx.fill();
+      cx.fillStyle="#9a9488";cx.fillRect(-w*0.008,-w*0.28,w*0.016,w*0.28);
+      cx.fillStyle=isNight?"#c8ccd2":"#fdfdff";cx.beginPath();cx.moveTo(w*0.008,-w*0.26);cx.lineTo(w*0.008,-w*0.02);cx.lineTo(w*0.13,-w*0.02);cx.closePath();cx.fill();
+      cx.fillStyle=isNight?"#b8bcc2":"#eef0f4";cx.beginPath();cx.moveTo(-w*0.008,-w*0.24);cx.lineTo(-w*0.008,-w*0.03);cx.lineTo(-w*0.1,-w*0.03);cx.closePath();cx.fill();
+      cx.restore();
+      break;}
     case "leg":{
       const w=360*sc,h=120*sc,dr=46*sc;
       const stone=isNight?"#4a4740":"#b8b09c", stoneD=isNight?"#3a3833":"#9a917d";
@@ -3588,7 +3895,7 @@ function endTitle(){
 buildTrack(false);
 renderGarage();
 startTitle();
-(function(){const b=document.getElementById("buildtag");if(b)b.textContent="engine ready · v39";})();
+(function(){const b=document.getElementById("buildtag");if(b)b.textContent="engine ready · v40 · Sidney";})();
 let last=performance.now();
 let frameErrs=0;
 function loop(now){
