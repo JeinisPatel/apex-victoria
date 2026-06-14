@@ -209,7 +209,7 @@
 <div class="tc" id="tc-boost">&#9889;</div>
 <div id="kbd-legend">
   <b>V</b> view &nbsp; <b>P</b> pit &nbsp; <b>R</b> mirrors &nbsp; <b>N</b> music &nbsp; <b>M</b> mute
-  &nbsp;<span style="opacity:.5">·</span>&nbsp; <span class="vtag">v33</span>
+  &nbsp;<span style="opacity:.5">·</span>&nbsp; <span class="vtag">v34</span>
 </div>
 <div id="tc-strip">
   <div class="tcbtn" id="tc-view"><span class="ic">◱</span><span class="lb">VIEW</span></div>
@@ -1404,23 +1404,23 @@ const LAND_HARBOUR=[
 ];
 /* ---- The Gorge world: its own landmarks, evoking the waterway's real character ---- */
 const LAND_GORGE=[
-  {x:1529,y:989,t:"trestle", label:"Selkirk Trestle"},      /* the black wooden rail trestle over the water */
-  {x:2008,y:739, t:"pavilion",label:"Gorge Park Pavilion"},  /* Esquimalt Gorge Park + Japanese garden */
+  {x:1799,y:989,t:"trestle", label:"Selkirk Trestle"},      /* the black wooden rail trestle over the water */
+  {x:2022,y:701, t:"pavilion",label:"Gorge Park Pavilion"},  /* Esquimalt Gorge Park + Japanese garden */
   {x:1100,y:1700,t:"golf",   label:"Gorge Vale Golf Club"},
-  {x:2180,y:1500,t:"trail",  label:"Galloping Goose Trail"}, /* the cycling/walking trail marker */
+  {x:2240,y:1500,t:"trail",  label:"Galloping Goose Trail"}, /* the cycling/walking trail marker */
   {x:880, y:900, t:"heritage",label:"Point Ellice House"},   /* heritage house + gardens by the water */
   {x:2120,y:2180,t:"tilli",  label:"Tillicum Narrows"},      /* the reversing falls under the bridge */
   /* paddlers on the Gorge waterway (the Gorge's version of the orcas) */
-  {x:1560,y:760, t:"rower",  label:"",sea:true,ph:0.0},
-  {x:1640,y:1500,t:"rower",  label:"",sea:true,ph:1.6},
+  {x:1530,y:708, t:"rower",  label:"",sea:true,ph:0.0},
+  {x:1591,y:1379,t:"rower",  label:"",sea:true,ph:1.6},
   {x:1980,y:2100,t:"kayak",  label:"",sea:true,ph:0.0},
   {x:2200,y:2160,t:"kayak",  label:"",sea:true,ph:2.4},
-  {x:1420,y:1820,t:"kayak",  label:"",sea:true,ph:4.0},
+  {x:1358,y:1787,t:"kayak",  label:"",sea:true,ph:4.0},
   /* a heron standing in the shallows, a Gorge staple */
-  {x:1320,y:1880,t:"heron",  label:"",ph:0.0},
+  {x:1296,y:1862,t:"heron",  label:"",ph:0.0},
   /* geese + trail greenery to make the parkland feel alive */
   {x:1180,y:1640,t:"geese",  label:"",ph:0.0},
-  {x:2240,y:1560,t:"geese",  label:"",ph:1.1},
+  {x:2250,y:1560,t:"geese",  label:"",ph:1.1},
   {x:1500,y:760, t:"flyby",  label:"",sea:true,ph:0.0, spd:0.09, dir:1, alt:160},
   {x:1900,y:1900,t:"flyby",  label:"",sea:true,ph:0.5, spd:0.11, dir:-1,alt:130},
 ];
@@ -1692,8 +1692,8 @@ function drawLandTop(l,camX,camY){
       cx.restore();
       break;}
     case "trestle":{
-      /* Selkirk Trestle: long black wooden rail trestle striding across the water */
-      const len=150;
+      /* Selkirk Trestle: black wooden rail trestle striding across the water */
+      const len=95;
       cx.fillStyle=isNight?"#1a1712":"#2a2018";
       cx.fillRect(-len,-7,len*2,14);                              /* the deck */
       cx.fillStyle=isNight?"#0f0d0a":"#1a130d";
@@ -1706,26 +1706,55 @@ function drawLandTop(l,camX,camY){
       cx.fillStyle="#6a5238";cx.fillRect(-len,-9,len*2,2);        /* hand rail */
       break;}
     case "pavilion":{
-      /* Gorge Park Pavilion: a green-roofed garden pavilion with a little red bridge */
-      cx.fillStyle=isNight?"#3a3a30":"#cdc4ad";cx.fillRect(-30,-22,60,44); /* base */
-      cx.fillStyle=isNight?"#1d4a3c":"#2e7d63";                   /* pagoda roof */
-      cx.beginPath();cx.moveTo(-38,-22);cx.lineTo(0,-44);cx.lineTo(38,-22);cx.closePath();cx.fill();
-      cx.fillStyle=isNight?"#163d33":"#256b54";cx.fillRect(-4,-50,8,8);
-      /* a red japanese garden bridge beside it */
-      cx.strokeStyle="#b0392b";cx.lineWidth=4;cx.beginPath();cx.arc(34,30,18,Math.PI,2*Math.PI);cx.stroke();
-      /* garden greenery */
+      /* Gorge Park Pavilion: tiered green pagoda with a wrap verandah + a red koi-pond bridge */
+      cx.fillStyle="rgba(0,0,0,.18)";cx.beginPath();cx.ellipse(2,4,40,30,0,0,7);cx.fill();   /* ground shadow */
+      /* stone terrace it sits on */
+      cx.fillStyle=isNight?"#34322a":"#b8af96";cx.fillRect(-36,-16,72,40);
+      cx.fillStyle=isNight?"#2a2820":"#a59c84";cx.fillRect(-36,20,72,4);
+      /* timber walls + verandah posts */
+      cx.fillStyle=isNight?"#403a30":"#cdc4ad";cx.fillRect(-28,-14,56,34);
+      cx.fillStyle=isNight?"#322d25":"#8a7d5e";for(let px=-26;px<=26;px+=13)cx.fillRect(px,-14,3,34); /* posts */
+      cx.fillStyle=isNight?"#2a2620":"#6a5a40";cx.fillRect(-28,6,56,3);     /* verandah rail */
+      /* lower roof eave (wide) */
+      cx.fillStyle=isNight?"#173d31":"#2a7259";
+      cx.beginPath();cx.moveTo(-40,-14);cx.lineTo(0,-30);cx.lineTo(40,-14);cx.closePath();cx.fill();
+      /* upper tier */
+      cx.fillStyle=isNight?"#1d4a3c":"#2e7d63";
+      cx.beginPath();cx.moveTo(-26,-26);cx.lineTo(0,-46);cx.lineTo(26,-26);cx.closePath();cx.fill();
+      /* ridge highlight + finial */
+      cx.fillStyle=isNight?"#26604d":"#3a9476";cx.fillRect(-2,-46,4,20);
+      cx.fillStyle="#d9b44a";cx.beginPath();cx.arc(0,-47,2.4,0,7);cx.fill();
+      /* upturned eave tips (the pagoda look) */
+      cx.strokeStyle=isNight?"#173d31":"#256b54";cx.lineWidth=2;
+      cx.beginPath();cx.moveTo(-40,-14);cx.quadraticCurveTo(-44,-18,-42,-22);cx.moveTo(40,-14);cx.quadraticCurveTo(44,-18,42,-22);cx.stroke();
+      /* warm interior glow at night */
+      if(isNight){cx.fillStyle="rgba(255,210,120,.5)";cx.fillRect(-20,-8,40,12);}
+      /* red arched koi-pond bridge + greenery */
+      cx.strokeStyle="#b0392b";cx.lineWidth=4;cx.beginPath();cx.arc(40,34,16,Math.PI,2*Math.PI);cx.stroke();
+      cx.strokeStyle="#8a2c20";cx.lineWidth=1.5;cx.beginPath();cx.arc(40,34,16,Math.PI,2*Math.PI);cx.stroke();
       cx.fillStyle=isNight?"#1f3a24":"#3f7a42";
-      for(const gx of [-34,30]){cx.beginPath();cx.arc(gx,18,7,0,7);cx.fill();}
+      for(const[gx,gy,gr]of[[-38,24,8],[34,16,6],[-30,-20,5]]){cx.beginPath();cx.arc(gx,gy,gr,0,7);cx.fill();}
       break;}
     case "golf":{
-      /* Gorge Vale Golf Club: rolling green with a flag and bunkers */
-      cx.fillStyle=isNight?"#234a2a":"#4c9a4f";cx.beginPath();cx.ellipse(0,0,46,34,0,0,7);cx.fill();
-      cx.fillStyle=isNight?"#2a5230":"#57a85a";cx.beginPath();cx.ellipse(-8,-4,30,20,0,0,7);cx.fill();
+      /* Gorge Vale Golf Club: rolling green + bunkers + a defined clubhouse */
+      cx.fillStyle=isNight?"#234a2a":"#4c9a4f";cx.beginPath();cx.ellipse(0,4,46,30,0,0,7);cx.fill();
+      cx.fillStyle=isNight?"#2a5230":"#57a85a";cx.beginPath();cx.ellipse(-8,0,30,18,0,0,7);cx.fill();
+      /* mown fairway stripes */
+      cx.strokeStyle=isNight?"rgba(255,255,255,.04)":"rgba(255,255,255,.10)";cx.lineWidth=4;
+      for(let s=-20;s<=20;s+=8){cx.beginPath();cx.moveTo(s-18,-6);cx.lineTo(s,14);cx.stroke();}
       cx.fillStyle=isNight?"#caa86a":"#e6d2a0";                   /* bunkers */
-      cx.beginPath();cx.ellipse(22,12,11,7,0,0,7);cx.fill();cx.beginPath();cx.ellipse(-26,14,8,5,0,0,7);cx.fill();
-      cx.fillStyle="#2a2a2a";cx.fillRect(2,-22,1.5,18);           /* flag pole */
-      cx.fillStyle="#e23a2e";cx.beginPath();cx.moveTo(3.5,-22);cx.lineTo(13,-18);cx.lineTo(3.5,-14);cx.closePath();cx.fill();
-      cx.fillStyle="#fff";cx.beginPath();cx.arc(3,-3,2,0,7);cx.fill();  /* the hole/ball */
+      cx.beginPath();cx.ellipse(24,14,11,7,0,0,7);cx.fill();cx.beginPath();cx.ellipse(-28,16,8,5,0,0,7);cx.fill();
+      /* flag + hole */
+      cx.fillStyle="#2a2a2a";cx.fillRect(2,-18,1.5,16);
+      cx.fillStyle="#e23a2e";cx.beginPath();cx.moveTo(3.5,-18);cx.lineTo(12,-14);cx.lineTo(3.5,-10);cx.closePath();cx.fill();
+      cx.fillStyle="#fff";cx.beginPath();cx.arc(3,1,1.8,0,7);cx.fill();
+      /* the clubhouse: a tidy white building with a green hipped roof, up at the back-left */
+      const cxh=-30,cyh=-22;
+      cx.fillStyle="rgba(0,0,0,.16)";cx.fillRect(cxh-16,cyh-8,40,22);
+      cx.fillStyle=isNight?"#4a4740":"#eceae2";cx.fillRect(cxh-15,cyh-6,34,18);   /* walls */
+      cx.fillStyle=isNight?"#caa84a":"#ffd97a";for(const wx of[-10,-1,8])cx.fillRect(cxh+wx,cyh+0,5,7); /* lit windows */
+      cx.fillStyle=isNight?"#1d4a3c":"#2e7d63";                                    /* hipped roof */
+      cx.beginPath();cx.moveTo(cxh-18,cyh-6);cx.lineTo(cxh+2,cyh-18);cx.lineTo(cxh+22,cyh-6);cx.closePath();cx.fill();
       break;}
     case "trail":{
       /* Galloping Goose Trail marker: a gravel path with a trail post + greenery */
@@ -1736,15 +1765,31 @@ function drawLandTop(l,camX,camY){
       for(const gx of [-30,26,4]){cx.beginPath();cx.arc(gx,16,8,0,7);cx.fill();}
       break;}
     case "heritage":{
-      /* Point Ellice House: a yellow heritage house with a steep roof + garden */
-      cx.fillStyle=isNight?"#5a4f3a":"#d9c47a";cx.fillRect(-26,-18,52,36);
-      cx.fillStyle=isNight?"#3a2a22":"#7a4636";                   /* steep roof */
-      cx.beginPath();cx.moveTo(-30,-18);cx.lineTo(0,-40);cx.lineTo(30,-18);cx.closePath();cx.fill();
-      cx.fillStyle=isNight?"#2a2018":"#5a4632";cx.fillRect(-8,-32,6,10); /* chimney */
-      cx.fillStyle=isNight?"#caa84a":"#ffd97a";                   /* windows */
-      for(const wx of [-16,-2,12])cx.fillRect(wx,-8,8,10);
-      cx.fillStyle=isNight?"#1f3a24":"#3f7a42";                   /* garden hedge */
-      cx.fillRect(-30,20,60,8);
+      /* Point Ellice House: an ornate yellow Victorian with bay window, porch + heritage trim */
+      cx.fillStyle="rgba(0,0,0,.18)";cx.beginPath();cx.ellipse(2,6,34,26,0,0,7);cx.fill();   /* shadow */
+      /* main body (heritage yellow) with white quoins */
+      cx.fillStyle=isNight?"#5a4f3a":"#e2cd7e";cx.fillRect(-26,-16,52,34);
+      cx.fillStyle=isNight?"#6a5f48":"#f2e6c0";cx.fillRect(-26,-16,4,34);cx.fillRect(22,-16,4,34); /* corner quoins */
+      /* steep gabled roof with two chimneys */
+      cx.fillStyle=isNight?"#3a2a22":"#6e3f30";
+      cx.beginPath();cx.moveTo(-30,-16);cx.lineTo(0,-42);cx.lineTo(30,-16);cx.closePath();cx.fill();
+      cx.fillStyle=isNight?"#2c2018":"#5a3528";                          /* roof shading */
+      cx.beginPath();cx.moveTo(0,-42);cx.lineTo(30,-16);cx.lineTo(14,-16);cx.closePath();cx.fill();
+      cx.fillStyle=isNight?"#2a2018":"#5a4632";cx.fillRect(-12,-34,5,11);cx.fillRect(8,-32,5,11); /* two chimneys */
+      cx.fillStyle=isNight?"#3a2e22":"#6a5642";cx.fillRect(-12,-34,5,2);cx.fillRect(8,-32,5,2);
+      /* projecting bay window (the Victorian signature) */
+      cx.fillStyle=isNight?"#665a42":"#ead98e";cx.fillRect(-24,2,16,16);
+      cx.fillStyle=isNight?"#caa84a":"#ffd97a";
+      cx.fillRect(-22,4,4,9);cx.fillRect(-16,4,4,9);cx.fillRect(-10,4,3,9);   /* bay panes */
+      /* upper-storey windows with white trim */
+      cx.fillStyle=isNight?"#3a352a":"#fff";for(const wx of[-16,-3,10]){cx.fillRect(wx-1,-9,9,11);}
+      cx.fillStyle=isNight?"#caa84a":"#cfe2f0";for(const wx of[-16,-3,10]){cx.fillRect(wx,-8,7,9);}
+      /* covered porch with posts */
+      cx.fillStyle=isNight?"#2a2620":"#8a6f4a";cx.fillRect(2,12,22,6);
+      cx.fillStyle=isNight?"#3a342a":"#a5895e";cx.fillRect(4,8,2,8);cx.fillRect(20,8,2,8);
+      /* white picket fence + garden */
+      cx.fillStyle=isNight?"#1f3a24":"#3f7a42";cx.fillRect(-30,20,60,7);
+      cx.fillStyle=isNight?"#4a4438":"#f0ead8";for(let fx=-30;fx<30;fx+=5)cx.fillRect(fx,19,1.6,5);
       break;}
     case "tilli":{
       /* Tillicum Narrows: the reversing falls — churning water under a small bridge */
@@ -2188,13 +2233,13 @@ function drawLandSprite(l,p,f){
       cx.fillStyle="#8a8578";cx.fillRect(x-w*0.42,yy+w*0.16,w*0.12,w*0.14);cx.fillRect(x+w*0.06,yy+w*0.16,w*0.12,w*0.14);
       break;}
     case "trestle":{
-      /* long black trestle receding across the water */
-      const w=200*sc;
+      /* black trestle receding across the water */
+      const w=150*sc;
       cx.fillStyle=isNight?"#15120d":"#2a2018";
-      cx.fillRect(x-w*0.9,y-w*0.07,w*1.8,w*0.14);
+      cx.fillRect(x-w*0.6,y-w*0.07,w*1.2,w*0.14);
       cx.fillStyle=isNight?"#0a0805":"#181009";
-      for(let i=-9;i<=9;i++){const bx=x+i*w*0.1;cx.fillRect(bx-w*0.01,y-w*0.05,w*0.02,w*0.4);}
-      cx.fillStyle="#6a5238";cx.fillRect(x-w*0.9,y-w*0.09,w*1.8,w*0.03);
+      for(let i=-6;i<=6;i++){const bx=x+i*w*0.1;cx.fillRect(bx-w*0.012,y-w*0.05,w*0.024,w*0.42);}
+      cx.fillStyle="#6a5238";cx.fillRect(x-w*0.6,y-w*0.09,w*1.2,w*0.03);
       break;}
     case "pavilion":{
       const w=120*sc;
@@ -3350,7 +3395,7 @@ function endTitle(){
 buildTrack(false);
 renderGarage();
 startTitle();
-(function(){const b=document.getElementById("buildtag");if(b)b.textContent="engine ready · v33";})();
+(function(){const b=document.getElementById("buildtag");if(b)b.textContent="engine ready · v34";})();
 let last=performance.now();
 let frameErrs=0;
 function loop(now){
