@@ -209,7 +209,7 @@
 <div class="tc" id="tc-boost">&#9889;</div>
 <div id="kbd-legend">
   <b>V</b> view (cockpit/chase/top) &nbsp; <b>P</b> pit &nbsp; <b>R</b> mirrors &nbsp; <b>N</b> music &nbsp; <b>M</b> mute
-  &nbsp;<span style="opacity:.5">·</span>&nbsp; <span class="vtag">v42</span>
+  &nbsp;<span style="opacity:.5">·</span>&nbsp; <span class="vtag">v43</span>
 </div>
 <div id="tc-strip">
   <div class="tcbtn" id="tc-view"><span class="ic">◱</span><span class="lb">VIEW</span></div>
@@ -3742,21 +3742,50 @@ const music={on:true,next:0,step:0,gain:null};
 function musicInit(){
   if(!AC||music.gain)return;
   music.gain=AC.createGain();music.gain.gain.value=0.12;music.gain.connect(master);
+  music.duck=AC.createGain();music.duck.gain.value=1;music.duck.connect(music.gain);  /* sidechain bus */
 }
 function m2f(m){return 440*Math.pow(2,(m-69)/12);}
-function mTone(t,freq,dur,type,g,slide){
+function mTone(t,freq,dur,type,g,slide,out){
   const o=AC.createOscillator();o.type=type;o.frequency.setValueAtTime(freq,t);
   if(slide)o.frequency.exponentialRampToValueAtTime(slide,t+dur);
   const gn=AC.createGain();gn.gain.setValueAtTime(g,t);
   gn.gain.exponentialRampToValueAtTime(0.001,t+dur);
-  o.connect(gn);gn.connect(music.gain);o.start(t);o.stop(t+dur+0.02);
+  o.connect(gn);gn.connect(out||music.gain);o.start(t);o.stop(t+dur+0.02);
 }
-function mNoise(t,dur,type,freq,g){
+function mNoise(t,dur,type,freq,g,out){
   const src=AC.createBufferSource();src.buffer=nbuf;
   const f=AC.createBiquadFilter();f.type=type;f.frequency.value=freq;
   const gn=AC.createGain();gn.gain.setValueAtTime(g,t);
   gn.gain.exponentialRampToValueAtTime(0.001,t+dur);
-  src.connect(f);f.connect(gn);gn.connect(music.gain);src.start(t);src.stop(t+dur+0.02);
+  src.connect(f);f.connect(gn);gn.connect(out||music.gain);src.start(t);src.stop(t+dur+0.02);
+}
+/* ---- trance building blocks ---- */
+function mKick(t){                              /* punchy four-on-the-floor kick + beater click */
+  const o=AC.createOscillator();o.type="sine";
+  o.frequency.setValueAtTime(175,t);o.frequency.exponentialRampToValueAtTime(46,t+0.055);
+  const gn=AC.createGain();gn.gain.setValueAtTime(0.95,t);gn.gain.exponentialRampToValueAtTime(0.001,t+0.24);
+  o.connect(gn);gn.connect(music.gain);o.start(t);o.stop(t+0.26);
+  mNoise(t,0.010,"highpass",3500,0.16);
+}
+function mPump(t,beat){                         /* sidechain: duck the bus on the kick, breathe back */
+  if(!music.duck)return; const d=music.duck.gain;
+  d.cancelScheduledValues(t); d.setValueAtTime(0.26,t); d.linearRampToValueAtTime(1.0,t+beat*0.92);
+}
+function mSaw(t,freq,dur,g,out,voices){         /* detuned supersaw with a filter sweep */
+  voices=voices||7;
+  const lp=AC.createBiquadFilter();lp.type="lowpass";lp.Q.value=0.8;
+  lp.frequency.setValueAtTime(480,t);
+  lp.frequency.linearRampToValueAtTime(3400,t+dur*0.45);
+  lp.frequency.linearRampToValueAtTime(720,t+dur);
+  const gn=AC.createGain();gn.gain.setValueAtTime(0.0001,t);
+  gn.gain.linearRampToValueAtTime(g,t+Math.min(0.03,dur*0.2));
+  gn.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  for(let i=0;i<voices;i++){
+    const det=voices>1?18*((i/(voices-1))-0.5)*2:0;       /* -18..+18 cents */
+    const o=AC.createOscillator();o.type="sawtooth";o.frequency.value=freq*Math.pow(2,det/1200);
+    o.connect(lp);o.start(t);o.stop(t+dur+0.02);
+  }
+  lp.connect(gn);gn.connect(out||music.gain);
 }
 const TRACKS=[
   {n:"Drive",bpm:138,bass:[45,45,48,45,43,43,46,43,41,41,45,41,43,46,48,50],
@@ -3795,26 +3824,29 @@ function musicTick(){
   while(music.next<AC.currentTime+0.3){
     const t=music.next,s=music.step,bar=(s>>3)%4;
     const TR=M_TRACK();
+    const ch=TR.arp[bar];
     if(TR.trance){
-      /* driving four-on-the-floor kick, offbeat open hat, rolling 16th closed hats */
-      if(s%2===0)mTone(t,120,0.16,"sine",0.62,40);              /* kick every beat */
-      if(s%4===2)mNoise(t,0.12,"highpass",6800,0.10);           /* offbeat open hat */
-      mNoise(t,0.02,"highpass",9000,0.06);                       /* 16th closed hats */
-      if(s%16===8)mNoise(t,0.11,"bandpass",2200,0.22);          /* clap on the 3 */
+      const beat=spb*2;
+      /* four-on-the-floor kick + the sidechain pump that defines the genre */
+      if(s%2===0){ mKick(t); mPump(t,beat); }
+      if(s%2===1) mNoise(t,0.11,"highpass",7000,0.13);                 /* offbeat open hat */
+      mNoise(t,0.018,"highpass",9500,0.05);                             /* closed hats */
+      if(s%4===2) mNoise(t,0.12,"bandpass",2000,0.20,music.duck);       /* clap on 2 & 4 */
+      /* rolling offbeat bass — plucky saw, ducked under the kick */
+      if(s%2===1) mTone(t,m2f(TR.bass[s%16]),spb*0.8,"sawtooth",0.24,null,music.duck);
+      /* rolling 16th supersaw arpeggio (two hits per 8th), ducked + filter-swept */
+      mSaw(t,         m2f(ch[s%ch.length]+12),     spb*0.6,0.055,music.duck,3);
+      mSaw(t+spb*0.5, m2f(ch[(s+2)%ch.length]+12), spb*0.6,0.055,music.duck,3);
+      /* lush supersaw pad chord, once per bar -> pumps hard with the kick */
+      if(s%8===0){ for(const n of ch) mSaw(t,m2f(n),beat*4*0.97,0.03,music.duck,5); }
     } else {
       if(s%4===0)mTone(t,130,0.12,"sine",0.55,35);
       if(s%8===4)mNoise(t,0.09,"bandpass",1900,0.28);
       if(s%2===1)mNoise(t,0.03,"highpass",7200,0.15);
-    }
-    mTone(t,m2f(TR.bass[s%16]),spb*0.9,"square",0.15);
-    const ch=TR.arp[bar];
-    if(TR.trance){
-      mTone(t,m2f(ch[s%ch.length]+12),spb*0.5,"sawtooth",0.07);
-      mTone(t,m2f(ch[(s+2)%ch.length]+24),spb*0.45,"sawtooth",0.04);  /* upper layer */
-    } else {
+      mTone(t,m2f(TR.bass[s%16]),spb*0.9,"square",0.15);
       mTone(t,m2f(ch[s%3]+12),spb*0.55,M_TRACK().wave,0.065);
+      if(s%16===14)mTone(t,m2f(ch[0]+24),spb*1.7,"triangle",0.09);
     }
-    if(s%16===14)mTone(t,m2f(ch[0]+24),spb*1.7,"triangle",0.09);
     music.next+=spb;music.step++;
   }
 }
@@ -4015,7 +4047,7 @@ function endTitle(){
 buildTrack(false);
 renderGarage();
 startTitle();
-(function(){const b=document.getElementById("buildtag");if(b)b.textContent="engine ready · v42";})();
+(function(){const b=document.getElementById("buildtag");if(b)b.textContent="engine ready · v43";})();
 let last=performance.now();
 let frameErrs=0;
 function loop(now){
