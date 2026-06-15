@@ -209,7 +209,7 @@
 <div class="tc" id="tc-boost">&#9889;</div>
 <div id="kbd-legend">
   <b>V</b> view (cockpit/chase/bumper/top) &nbsp; <b>P</b> pit &nbsp; <b>R</b> mirrors &nbsp; <b>N</b> music &nbsp; <b>M</b> mute
-  &nbsp;<span style="opacity:.5">·</span>&nbsp; <span class="vtag">v49</span>
+  &nbsp;<span style="opacity:.5">·</span>&nbsp; <span class="vtag">v50</span>
 </div>
 <div id="tc-strip">
   <div class="tcbtn" id="tc-view"><span class="ic">◱</span><span class="lb">VIEW</span></div>
@@ -476,6 +476,17 @@ const CIRCUITS={
     [520,640],[440,940],
     [600,1220],[460,1480],[600,1740],
     [480,2020]
+  ]},
+  /* Cordova Bay \u2014 a fast, flowing seaside circuit: long seafront straights on Haro Strait, sweeping bends inland past the golf course and Mount Douglas */
+  cordova:{name:"Cordova Bay", blurb:"A fast seaside sweep \u2014 long straights along Haro Strait, flowing bends past the golf links and Mount Douglas.",
+    land:"cordova", water:"cordova",
+    ctrl:[
+    [2150,2800],[2200,2300],[2225,1790],[2220,1280],[2175,780],[2070,440],
+    [1800,300],[1380,270],[980,330],
+    [640,500],[400,850],
+    [330,1290],[450,1670],[330,2060],
+    [400,2470],[620,2770],
+    [1000,2870],[1460,2830],[1880,2800],[2030,2710]
   ]}
 };
 let CTRL=CIRCUITS.harbour.ctrl;
@@ -612,7 +623,7 @@ function applyDamage(c,severity){
 }
 let cars=[], player=null, LAPS=3;
 let qualiGrid=null;
-const BASELAP={harbour:41, gorge:32, sidney:35.5, malahat:29};   /* per-circuit reference lap for the quali grid */
+const BASELAP={harbour:41, gorge:32, sidney:35.5, malahat:29, cordova:27};   /* per-circuit reference lap for the quali grid */
 function playerStats(){
   const v=1+vetBonus();
   return {
@@ -1017,8 +1028,8 @@ function startRace(){
   }
   const _circ = CIRCUITS[meta.circuit]||CIRCUITS.harbour;
   CTRL = _circ.ctrl;
-  LAND  = _circ.land==="gorge" ? LAND_GORGE : _circ.land==="sidney" ? LAND_SIDNEY : _circ.land==="malahat" ? LAND_MALAHAT : LAND_HARBOUR;
-  WATER = _circ.water==="gorge"? WATER_GORGE : _circ.water==="sidney"? WATER_SIDNEY : _circ.water==="malahat"? WATER_MALAHAT : WATER_HARBOUR;
+  LAND  = _circ.land==="gorge" ? LAND_GORGE : _circ.land==="sidney" ? LAND_SIDNEY : _circ.land==="malahat" ? LAND_MALAHAT : _circ.land==="cordova" ? LAND_CORDOVA : LAND_HARBOUR;
+  WATER = _circ.water==="gorge"? WATER_GORGE : _circ.water==="sidney"? WATER_SIDNEY : _circ.water==="malahat"? WATER_MALAHAT : _circ.water==="cordova"? WATER_CORDOVA : WATER_HARBOUR;
   buildTrack(ev.rev);
   for(const _l of LAND){let bi=0,bd=1e18;for(let i=0;i<N;i++){const dx=line[i].x-_l.x,dy=line[i].y-_l.y,dd=dx*dx+dy*dy;if(dd<bd){bd=dd;bi=i;}}_l._e=elev?elev[bi]:0;}
   skids=[];sparks=[];dust=[];replayBuf=[];replayAccum=0;
@@ -1494,6 +1505,11 @@ const WATER_MALAHAT=[
   [[980,720],[1180,760],[1240,1040],[1160,1360],[1260,1640],[1180,1900],
    [1000,1980],[860,1760],[960,1460],[880,1160],[940,900]],
 ];
+const WATER_CORDOVA=[
+  /* Haro Strait \u2014 the open sea east of the seafront, with the San Juan Islands beyond */
+  [[2380,480],[2770,450],[2820,1180],[2790,1980],[2700,2560],[2400,2580],
+   [2360,2060],[2400,1520],[2350,1020]],
+];
 let WATER=WATER_HARBOUR;
 function drawWater(t){
   for(const poly of WATER){
@@ -1648,6 +1664,42 @@ const LAND_MALAHAT=[
   {x:720, y:1920,t:"oak",     label:"",ph:1.3},
   /* a floatplane working the strait, high up */
   {x:1700,y:1000,t:"flyby",   label:"",dir:-1,spd:0.05,ph:0.0,alt:180},
+];
+const LAND_CORDOVA=[
+  /* Mount Douglas rising inland + Mount Baker across the strait */
+  {x:900, y:1450,t:"hill",    label:"Mount Douglas"},
+  {x:1320,y:1230,t:"hill",    label:""},
+  {x:2900,y:1050,t:"peak",    label:"Mount Baker"},
+  /* the golf links + Mattick's Farm inland */
+  {x:760, y:1950,t:"golf",    label:"Cordova Bay Golf"},
+  {x:1040,y:780, t:"barn",    label:"Mattick's Farm"},
+  /* Cordova Bay Beach + seaside cottages along the seafront */
+  {x:2345,y:1500,t:"beach",   label:"Cordova Bay Beach"},
+  {x:2350,y:1050,t:"beach",   label:""},
+  {x:2348,y:1980,t:"beach",   label:""},
+  {x:1910,y:1300,t:"cottage", label:""},
+  {x:1900,y:1720,t:"cottage", label:""},
+  {x:1925,y:880, t:"cottage", label:""},
+  {x:1905,y:2180,t:"cottage", label:""},
+  /* life on Haro Strait */
+  {x:2560,y:920, t:"sailboat",label:"",sea:true,ph:0.0},
+  {x:2640,y:1520,t:"sailboat",label:"",sea:true,ph:1.4},
+  {x:2520,y:1260,t:"kayak",   label:"",sea:true,ph:0.0},
+  {x:2560,y:1780,t:"kayak",   label:"",sea:true,ph:1.1},
+  {x:2470,y:1120,t:"heron",   label:"",sea:true,ph:0.0},
+  {x:2460,y:1880,t:"heron",   label:"",sea:true,ph:1.6},
+  {x:2600,y:1360,t:"gull",    label:"",sea:true,ph:0.5},
+  {x:2580,y:1660,t:"gull",    label:"",sea:true,ph:2.0},
+  {x:2720,y:1180,t:"eagle",   label:"",sea:true,ph:0.0,alt:130},
+  /* inland greenery */
+  {x:1280,y:1950,t:"oak",     label:"",ph:0.0},
+  {x:760, y:1480,t:"oak",     label:"",ph:1.2},
+  {x:1180,y:560, t:"oak",     label:"",ph:2.4},
+  {x:1450,y:1680,t:"fir",     label:"",ph:0.0},
+  {x:1560,y:1880,t:"fir",     label:"",ph:0.8},
+  {x:1380,y:1230,t:"fir",     label:"",ph:1.6},
+  /* a floatplane working the strait */
+  {x:2650,y:600, t:"flyby",   label:"",dir:-1,spd:0.05,ph:0.0,alt:170},
 ];
 let LAND=LAND_HARBOUR;
 function legLights(c,x,y,w,h,domeR){ // the famous outline of lights
@@ -1849,6 +1901,28 @@ function drawLandTop(l,camX,camY){
       cx.beginPath();cx.moveTo(-2,12);cx.lineTo(2,12);cx.lineTo(0,16);cx.closePath();cx.fill();
       cx.fillStyle="#e8a83a";cx.beginPath();cx.arc(0,-4,1,0,7);cx.fill();
       cx.restore();
+      break;}
+    case "hill":{
+      /* Mount Douglas: a forested rounded hill from above */
+      cx.fillStyle="rgba(0,0,0,.12)";cx.beginPath();cx.ellipse(6,8,44,22,0,0,7);cx.fill();
+      cx.fillStyle=isNight?"#16301d":"#2c5e34";cx.beginPath();cx.ellipse(0,0,42,26,0,0,7);cx.fill();
+      cx.fillStyle=isNight?"#1d3a25":"#3a7a42";cx.beginPath();cx.ellipse(-6,-4,26,16,0,0,7);cx.fill();
+      cx.fillStyle=isNight?"#0f2416":"#1f4a27";
+      for(let i=0;i<16;i++){const a=i*2.39996,r=10+((i*37)%30);cx.beginPath();cx.arc(Math.cos(a)*r*1.4,Math.sin(a)*r*0.8,3,0,7);cx.fill();}
+      break;}
+    case "beach":{
+      /* a pebble/sand shore patch with driftwood */
+      cx.fillStyle=isNight?"#3a3528":"#cbb187";cx.beginPath();cx.ellipse(0,0,30,16,0,0,7);cx.fill();
+      cx.fillStyle=isNight?"#43402f":"#d8c39a";cx.beginPath();cx.ellipse(-4,-3,18,9,0,0,7);cx.fill();
+      cx.strokeStyle=isNight?"#4a4236":"#8a7a60";cx.lineWidth=4;cx.lineCap="round";
+      cx.beginPath();cx.moveTo(-16,6);cx.lineTo(6,2);cx.moveTo(-2,10);cx.lineTo(18,7);cx.stroke();cx.lineCap="butt";
+      break;}
+    case "cottage":{
+      /* a small seaside beach house from above: roof + deck */
+      cx.fillStyle="rgba(0,0,0,.16)";cx.fillRect(-15,-10,34,24);
+      cx.fillStyle=isNight?"#3a2f28":"#9c5a44";cx.fillRect(-14,-11,28,22);
+      cx.fillStyle=isNight?"#2e2620":"#7a4636";cx.fillRect(-14,-1,28,2);
+      cx.fillStyle=isNight?"#33352f":"#c8c0a8";cx.fillRect(14,-8,8,16);
       break;}
     case "gull":{
       /* a gull bobbing on the water */
@@ -2654,6 +2728,30 @@ function drawLandSprite(l,p,f){
       cx.fillStyle=isNight?"#d8dce0":"#f4f5f7";cx.beginPath();cx.arc(x,y-w*0.02,w*0.035,0,7);cx.fill();
       cx.fillStyle="#e8a83a";cx.beginPath();cx.arc(x,y-w*0.04,w*0.014,0,7);cx.fill();
       break;}
+    case "hill":{
+      const w=Math.min(340*sc,300);   /* forested hill backdrop, size-capped like the peaks */
+      const h1=isNight?"#13291a":"#2a5a32", h2=isNight?"#1a3622":"#377540";
+      cx.fillStyle=h1;cx.beginPath();cx.moveTo(x-w*0.5,y);cx.quadraticCurveTo(x-w*0.3,y-w*0.34,x,y-w*0.4);cx.quadraticCurveTo(x+w*0.3,y-w*0.34,x+w*0.5,y);cx.closePath();cx.fill();
+      cx.fillStyle=h2;cx.beginPath();cx.moveTo(x-w*0.3,y-w*0.14);cx.quadraticCurveTo(x-w*0.12,y-w*0.36,x+w*0.05,y-w*0.38);cx.quadraticCurveTo(x+w*0.2,y-w*0.3,x+w*0.28,y-w*0.16);cx.closePath();cx.fill();
+      cx.fillStyle=h1;for(let i=0;i<7;i++){const tx=x-w*0.34+i*w*0.11, ty=y-w*0.28-Math.sin(i*0.9)*w*0.05;cx.beginPath();cx.moveTo(tx,ty);cx.lineTo(tx-w*0.03,ty+w*0.08);cx.lineTo(tx+w*0.03,ty+w*0.08);cx.closePath();cx.fill();}
+      break;}
+    case "beach":{
+      const w=110*sc;
+      cx.fillStyle=isNight?"#3a3528":"#cbb187";cx.beginPath();cx.ellipse(x,y,w*0.34,w*0.07,0,0,7);cx.fill();
+      cx.fillStyle=isNight?"#332f24":"#bda478";cx.beginPath();cx.ellipse(x,y+w*0.02,w*0.34,w*0.05,0,0,Math.PI);cx.fill();
+      cx.strokeStyle=isNight?"#4a4236":"#9a8868";cx.lineWidth=Math.max(1.5,w*0.03);cx.lineCap="round";
+      cx.beginPath();cx.moveTo(x-w*0.22,y-w*0.01);cx.lineTo(x+w*0.05,y-w*0.03);cx.stroke();
+      cx.beginPath();cx.moveTo(x-w*0.05,y+w*0.02);cx.lineTo(x+w*0.2,y);cx.stroke();cx.lineCap="butt";
+      break;}
+    case "cottage":{
+      const w=95*sc;
+      const wall=isNight?"#2a2c30":"#e8e2d2", roof=isNight?"#3a2f28":"#9c5a44", trim=isNight?"#3a3d44":"#5e7d92";
+      cx.fillStyle=wall;cx.fillRect(x-w*0.3,y-w*0.32,w*0.6,w*0.32);
+      cx.fillStyle=roof;cx.beginPath();cx.moveTo(x-w*0.36,y-w*0.3);cx.lineTo(x,y-w*0.54);cx.lineTo(x+w*0.36,y-w*0.3);cx.closePath();cx.fill();
+      cx.fillStyle=trim;cx.fillRect(x-w*0.18,y-w*0.2,w*0.12,w*0.12);cx.fillRect(x+w*0.06,y-w*0.2,w*0.12,w*0.12);
+      cx.fillStyle=isNight?"#1c1e22":"#7a6a52";cx.fillRect(x-w*0.04,y-w*0.16,w*0.08,w*0.16);
+      if(isNight){cx.fillStyle="rgba(255,228,150,.6)";cx.fillRect(x-w*0.16,y-w*0.18,w*0.08,w*0.08);}
+      break;}
     case "gull":{
       const w=90*sc, bob=Math.sin(state.t*1.6+l.x)*w*0.015;
       cx.save();cx.translate(0,bob);
@@ -3275,7 +3373,12 @@ const LANDMARK_SUB={
   "Craigdarroch Castle":"Victorian Landmark",
   "Red Fish Blue Fish":"Dockside Fish & Chips",
   "Malahat SkyWalk":"A Spiral Walk in the Sky",
-  "Summit Lookout":"High Over Saanich Inlet"
+  "Summit Lookout":"High Over Saanich Inlet",
+  "Mount Douglas":"PKOLS \u2014 Over the Bay",
+  "Mount Baker":"Across the Strait",
+  "Cordova Bay Golf":"Links by the Sea",
+  "Mattick's Farm":"Market & Gardens",
+  "Cordova Bay Beach":"Pebbles & Driftwood"
 };
 function checkCallouts(){
   if(!player||!state.started||player.finished)return;
@@ -3612,9 +3715,9 @@ function drawCockpit(){
     sprites.push({c,p});
   }
   for(const l of LAND){
-    const isPeak=l.t==="peak";                                  /* distant mountains read as a backdrop, not climb-projected objects */
-    const p=proj(l.x,l.y, isPeak?camElev:(l._e||0));
-    if(p.z<CAM.NEAR||p.z>(isPeak?4200:2600)||(p.over&&!isPeak))continue;
+    const isBg=l.t==="peak"||l.t==="hill";                      /* distant mountains/hills read as a backdrop, not climb-projected objects */
+    const p=proj(l.x,l.y, isBg?camElev:(l._e||0));
+    if(p.z<CAM.NEAR||p.z>(isBg?4200:2600)||(p.over&&!isBg))continue;
     if(p.x<-VW*0.45||p.x>VW*1.45)continue;
     if(l.bob)p.y+=Math.sin(state.t*1.4+l.x)*2;
     sprites.push({land:l,p});
@@ -4334,7 +4437,7 @@ function endTitle(){
 buildTrack(false);
 renderGarage();
 startTitle();
-(function(){const b=document.getElementById("buildtag");if(b)b.textContent="engine ready · v49";})();
+(function(){const b=document.getElementById("buildtag");if(b)b.textContent="engine ready · v50";})();
 let last=performance.now();
 let frameErrs=0;
 function loop(now){
