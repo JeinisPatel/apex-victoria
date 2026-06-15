@@ -209,7 +209,7 @@
 <div class="tc" id="tc-boost">&#9889;</div>
 <div id="kbd-legend">
   <b>V</b> view (cockpit/chase/bumper/top) &nbsp; <b>P</b> pit &nbsp; <b>R</b> mirrors &nbsp; <b>N</b> music &nbsp; <b>M</b> mute
-  &nbsp;<span style="opacity:.5">·</span>&nbsp; <span class="vtag">v44</span>
+  &nbsp;<span style="opacity:.5">·</span>&nbsp; <span class="vtag">v45</span>
 </div>
 <div id="tc-strip">
   <div class="tcbtn" id="tc-view"><span class="ic">◱</span><span class="lb">VIEW</span></div>
@@ -821,7 +821,10 @@ function stepCar(c,dt){
     c.lastLap=t-c.lapStart; c.lapStart=t;
     if(!c.bestLap||c.lastLap<c.bestLap)c.bestLap=c.lastLap;
     c.lap=lapsDone+1;
-    if(c.isPlayer&&c.lap<=LAPS){flash("LAP "+c.lap);sfx.lap();}
+    if(c.isPlayer){
+      if(state.mode==="quali"){ if(lapsDone===1){flash("HOT LAP — PUSH!");sfx.lap();} }
+      else if(c.lap<=LAPS){flash("LAP "+c.lap);sfx.lap();}
+    }
     /* serve pit when crossing the line: player if armed, AI if tyres are gone and race is long enough */
     if(lapsDone<LAPS&&c.pitCool<=0){
       const wantsPit = c.isPlayer ? c.wantPit
@@ -957,7 +960,7 @@ function renderGarage(){
 }
 function startRace(){
   const ev=EVENTS[meta.event];
-  LAPS=state.mode==="tt"?3:state.mode==="quali"?1:ev.laps;
+  LAPS=state.mode==="tt"?3:state.mode==="quali"?2:ev.laps;
   /* time of day: auto follows the event, else the player's pick */
   /* auto follows each event's own time-of-day (day/dusk/night); else the player's pick */
   let effTod = meta.todPick;
@@ -1018,10 +1021,7 @@ function startRace(){
   show("garage",false);hudShow(true);
   document.getElementById("lights").style.display="flex";
   if(state.mode==="quali"){
-    state.started=true; state.countdown=0;
-    player.v=player.maxv*0.55; player.lapStart=0; state.raceT=0;
-    document.getElementById("lights").style.display="none";
-    flash("QUALIFYING — ONE FLYING LAP, PUSH!");
+    flash("QUALIFYING — OUT LAP, THEN YOUR FLYING LAP");   /* lights run as normal; standing start */
   }
   // boost pips
   const bp=document.getElementById("boost-pips");bp.innerHTML="";
@@ -1152,7 +1152,7 @@ function stopConfetti(){
 function qualiComplete(){
   state.over=true; state.running=false;
   const ev=EVENTS[meta.event];
-  const tp=player.bestLap||player.lastLap||BASELAP[meta.circuit]||40;
+  const tp=player.lastLap||player.bestLap||BASELAP[meta.circuit]||40;
   const base=BASELAP[meta.circuit]||tp;
   const entries=[{pk:"__PLAYER__",name:meta.driver,time:tp,me:true}];
   for(const t of TEAMS){
@@ -1329,7 +1329,7 @@ function update(dt){
     if(lit>(state.lastLit||0)&&state.countdown>0.4)sfx.beep();state.lastLit=lit;
     document.querySelectorAll("#lights .l").forEach((el,i)=>el.classList.toggle("on",i<lit&&state.countdown>0.4));
     if(state.countdown<=0.4&&state.countdown>0)document.querySelectorAll("#lights .l").forEach(el=>el.classList.remove("on"));
-    if(state.countdown<=0){state.started=true;document.getElementById("lights").style.display="none";flash("LIGHTS OUT, GO!");sfx.go();
+    if(state.countdown<=0){state.started=true;document.getElementById("lights").style.display="none";flash(state.mode==="quali"?"GO — OUT LAP":"LIGHTS OUT, GO!");sfx.go();
       for(const c of cars)c.lapStart=0;}
   } else state.raceT+=dt;
   for(const c of cars)stepCar(c,dt);
@@ -4131,7 +4131,7 @@ function endTitle(){
 buildTrack(false);
 renderGarage();
 startTitle();
-(function(){const b=document.getElementById("buildtag");if(b)b.textContent="engine ready · v44";})();
+(function(){const b=document.getElementById("buildtag");if(b)b.textContent="engine ready · v45";})();
 let last=performance.now();
 let frameErrs=0;
 function loop(now){
