@@ -209,7 +209,7 @@
 <div class="tc" id="tc-boost">&#9889;</div>
 <div id="kbd-legend">
   <b>V</b> view (cockpit/chase/bumper/top) &nbsp; <b>P</b> pit &nbsp; <b>R</b> mirrors &nbsp; <b>N</b> music &nbsp; <b>M</b> mute
-  &nbsp;<span style="opacity:.5">·</span>&nbsp; <span class="vtag">v45</span>
+  &nbsp;<span style="opacity:.5">·</span>&nbsp; <span class="vtag">v46</span>
 </div>
 <div id="tc-strip">
   <div class="tcbtn" id="tc-view"><span class="ic">◱</span><span class="lb">VIEW</span></div>
@@ -463,6 +463,19 @@ const CIRCUITS={
     [2420,1380],[2480,1060],[2600,760],[2460,470],[2080,400],[1680,460],
     [1560,760],[1700,1040],[1520,1260],[1160,1240],[940,1020],[1000,700],
     [860,460],[540,500],[420,820],[520,1160],[760,1380],[760,1700],[640,2080]
+  ]},
+  /* The Malahat Climb \u2014 a twisting mountain pass: switchbacks, technical esses, summit ridge over the inlet */
+  malahat:{name:"The Malahat Climb", blurb:"A twisting mountain pass \u2014 switchbacks and esses climbing to a ridge high over Saanich Inlet.",
+    land:"malahat", water:"malahat",
+    ctrl:[
+    [620,2320],[1140,2390],[1680,2360],[2100,2380],
+    [2420,2240],[2560,1960],[2460,1720],
+    [2580,1500],[2500,1280],[2620,1060],
+    [2480,760],[2560,520],[2300,400],
+    [1900,420],[1500,440],[1120,400],[760,460],
+    [520,640],[440,940],
+    [600,1220],[460,1480],[600,1740],
+    [480,2020]
   ]}
 };
 let CTRL=CIRCUITS.harbour.ctrl;
@@ -581,7 +594,7 @@ function applyDamage(c,severity){
 }
 let cars=[], player=null, LAPS=3;
 let qualiGrid=null;
-const BASELAP={harbour:41, gorge:32, sidney:35.5};   /* per-circuit reference lap for the quali grid */
+const BASELAP={harbour:41, gorge:32, sidney:35.5, malahat:28};   /* per-circuit reference lap for the quali grid */
 function playerStats(){
   const v=1+vetBonus();
   return {
@@ -985,8 +998,8 @@ function startRace(){
   }
   const _circ = CIRCUITS[meta.circuit]||CIRCUITS.harbour;
   CTRL = _circ.ctrl;
-  LAND  = _circ.land==="gorge" ? LAND_GORGE : _circ.land==="sidney" ? LAND_SIDNEY : LAND_HARBOUR;
-  WATER = _circ.water==="gorge"? WATER_GORGE : _circ.water==="sidney"? WATER_SIDNEY : WATER_HARBOUR;
+  LAND  = _circ.land==="gorge" ? LAND_GORGE : _circ.land==="sidney" ? LAND_SIDNEY : _circ.land==="malahat" ? LAND_MALAHAT : LAND_HARBOUR;
+  WATER = _circ.water==="gorge"? WATER_GORGE : _circ.water==="sidney"? WATER_SIDNEY : _circ.water==="malahat"? WATER_MALAHAT : WATER_HARBOUR;
   buildTrack(ev.rev);
   skids=[];sparks=[];dust=[];replayBuf=[];replayAccum=0;
   dryLine=new Float32Array(N);   /* 0 = wet, 1 = swept dry; starts wet in the wet */
@@ -1456,6 +1469,11 @@ const WATER_SIDNEY=[
   /* a northern inlet toward Swartz Bay (where the ferries berth) */
   [[2520,560],[2700,620],[2720,940],[2560,1120],[2440,920],[2480,700]],
 ];
+const WATER_MALAHAT=[
+  /* Finlayson Arm / Saanich Inlet \u2014 the fjord in the valley the pass climbs above */
+  [[980,720],[1180,760],[1240,1040],[1160,1360],[1260,1640],[1180,1900],
+   [1000,1980],[860,1760],[960,1460],[880,1160],[940,900]],
+];
 let WATER=WATER_HARBOUR;
 function drawWater(t){
   for(const poly of WATER){
@@ -1571,6 +1589,45 @@ const LAND_SIDNEY=[
   /* a float plane working the strait + a gull flock overhead */
   {x:2050,y:560, t:"flyby",  label:"",sea:true,dir:1,spd:0.05,ph:0.0,alt:150},
   {x:900, y:2000,t:"flyby",  label:"",sea:true,dir:-1,spd:0.07,ph:2.5,alt:130},
+];
+const LAND_MALAHAT=[
+  /* the summit ridge \u2014 the SkyWalk + a lookout high over the inlet */
+  {x:1400,y:680, t:"skywalk", label:"Malahat SkyWalk"},
+  {x:1780,y:660, t:"lookout", label:"Summit Lookout"},
+  /* distant peaks across Saanich Inlet */
+  {x:1640,y:1300,t:"peak",    label:""},
+  {x:1240,y:250, t:"peak",    label:""},
+  {x:2010,y:250, t:"peak",    label:""},
+  /* Finlayson Arm below \u2014 a boat + soaring eagles */
+  {x:1080,y:1400,t:"sailboat",label:"",sea:true,ph:0.0},
+  {x:1150,y:1660,t:"boat",    label:"",sea:true,ph:1.0},
+  {x:1100,y:1080,t:"eagle",   label:"",sea:true,ph:0.0,alt:120},
+  {x:1210,y:900, t:"eagle",   label:"",sea:true,ph:2.1,alt:140},
+  /* Douglas-fir forest on the slopes (infield) */
+  {x:1520,y:920, t:"fir",     label:"",ph:0.0},
+  {x:1680,y:1150,t:"fir",     label:"",ph:0.8},
+  {x:1470,y:1520,t:"fir",     label:"",ph:1.6},
+  {x:1360,y:1760,t:"fir",     label:"",ph:2.4},
+  {x:1640,y:1640,t:"fir",     label:"",ph:3.0},
+  {x:1790,y:1000,t:"fir",     label:"",ph:3.6},
+  {x:1860,y:1380,t:"fir",     label:"",ph:0.4},
+  /* forest on the outer mountainside */
+  {x:2710,y:1380,t:"fir",     label:"",ph:1.2},
+  {x:2720,y:920, t:"fir",     label:"",ph:2.0},
+  {x:980, y:1880,t:"fir",     label:"",ph:2.8},
+  {x:330, y:1520,t:"fir",     label:"",ph:0.6},
+  {x:700, y:1060,t:"fir",     label:"",ph:1.4},
+  /* granite rock cuts at the roadside */
+  {x:2740,y:1880,t:"bluff",   label:""},
+  {x:2760,y:1240,t:"bluff",   label:""},
+  {x:300, y:1440,t:"bluff",   label:""},
+  {x:320, y:1120,t:"bluff",   label:""},
+  /* arbutus trees clinging to the rock */
+  {x:1700,y:560, t:"oak",     label:"",ph:2.0},
+  {x:2130,y:600, t:"oak",     label:"",ph:0.5},
+  {x:720, y:1920,t:"oak",     label:"",ph:1.3},
+  /* a floatplane working the strait, high up */
+  {x:1700,y:1000,t:"flyby",   label:"",dir:-1,spd:0.05,ph:0.0,alt:180},
 ];
 let LAND=LAND_HARBOUR;
 function legLights(c,x,y,w,h,domeR){ // the famous outline of lights
@@ -1713,6 +1770,65 @@ function drawLandTop(l,camX,camY){
         cx.fillStyle=blooms[i%blooms.length];cx.beginPath();cx.arc(Math.cos(a)*r,Math.sin(a)*r*0.72,3,0,7);cx.fill();}
       cx.fillStyle=isNight?"#3a4750":"#aebfc8";cx.beginPath();cx.arc(0,0,5,0,7);cx.fill();   /* fountain */
       cx.fillStyle=isNight?"#6a8aa0":"#cfe6f2";cx.beginPath();cx.arc(0,0,2.4,0,7);cx.fill();
+      break;}
+    case "skywalk":{
+      /* the Malahat SkyWalk: a wooden spiral ramp tower seen from above */
+      cx.fillStyle="rgba(0,0,0,.18)";cx.beginPath();cx.ellipse(4,6,30,14,0,0,7);cx.fill();
+      const sw1=isNight?"#5a4631":"#a9824f", sw2=isNight?"#6b5238":"#bd935c";
+      for(let r=30;r>=8;r-=7){cx.strokeStyle=((r/7)|0)%2?sw1:sw2;cx.lineWidth=4;cx.beginPath();cx.arc(0,0,r,0,7);cx.stroke();}
+      cx.strokeStyle=isNight?"#3c2f20":"#7a5e3a";cx.lineWidth=2;
+      for(let i=0;i<10;i++){const a=i*0.628;cx.beginPath();cx.moveTo(Math.cos(a)*7,Math.sin(a)*7);cx.lineTo(Math.cos(a)*30,Math.sin(a)*30);cx.stroke();}
+      cx.fillStyle=isNight?"rgba(180,200,210,.18)":"rgba(220,235,240,.4)";cx.beginPath();cx.arc(0,0,9,0,7);cx.fill();
+      cx.strokeStyle=isNight?"#8aa0aa":"#cfe0e6";cx.lineWidth=1;cx.beginPath();cx.arc(0,0,9,0,7);cx.stroke();
+      break;}
+    case "peak":{
+      /* a distant mountain ridge seen from above */
+      const pk=isNight?"#2c3338":"#6e7a74", psn=isNight?"#5a6770":"#dfe8ec";
+      cx.fillStyle="rgba(0,0,0,.12)";cx.beginPath();cx.ellipse(6,10,46,20,0,0,7);cx.fill();
+      cx.fillStyle=pk;cx.beginPath();cx.moveTo(-44,16);cx.lineTo(-10,-18);cx.lineTo(18,2);cx.lineTo(46,-10);cx.lineTo(48,16);cx.closePath();cx.fill();
+      cx.fillStyle=psn;cx.beginPath();cx.moveTo(-10,-18);cx.lineTo(-2,-8);cx.lineTo(-18,-6);cx.closePath();cx.fill();
+      cx.beginPath();cx.moveTo(46,-10);cx.lineTo(52,-2);cx.lineTo(40,0);cx.closePath();cx.fill();
+      break;}
+    case "fir":{
+      /* a Douglas fir from above: a dark conifer crown */
+      const fs=1+0.08*Math.sin(state.t*1.1+(l.ph||0)*3);
+      cx.save();cx.scale(fs,fs);
+      cx.fillStyle="rgba(0,0,0,.18)";cx.beginPath();cx.ellipse(3,4,13,6,0,0,7);cx.fill();
+      cx.fillStyle=isNight?"#16301d":"#235e30";cx.beginPath();cx.arc(0,0,14,0,7);cx.fill();
+      cx.fillStyle=isNight?"#1d3a25":"#2c7a3c";cx.beginPath();cx.arc(-2,-2,9,0,7);cx.fill();
+      cx.strokeStyle=isNight?"#0f2416":"#1a4423";cx.lineWidth=1.4;
+      for(let i=0;i<8;i++){const a=i*0.785;cx.beginPath();cx.moveTo(0,0);cx.lineTo(Math.cos(a)*13,Math.sin(a)*13);cx.stroke();}
+      cx.restore();
+      break;}
+    case "bluff":{
+      /* a granite rock outcrop seen from above */
+      const bk=isNight?"#3a3c40":"#7c7670", bk2=isNight?"#46484c":"#938c84";
+      cx.fillStyle="rgba(0,0,0,.16)";cx.beginPath();cx.ellipse(5,8,30,16,0,0,7);cx.fill();
+      cx.fillStyle=bk;cx.beginPath();cx.moveTo(-28,10);cx.lineTo(-16,-12);cx.lineTo(6,-16);cx.lineTo(26,-4);cx.lineTo(30,12);cx.lineTo(2,18);cx.closePath();cx.fill();
+      cx.fillStyle=bk2;cx.beginPath();cx.moveTo(-16,-12);cx.lineTo(6,-16);cx.lineTo(10,-4);cx.lineTo(-8,0);cx.closePath();cx.fill();
+      cx.strokeStyle=isNight?"#26282b":"#5d574f";cx.lineWidth=1.4;
+      cx.beginPath();cx.moveTo(-20,2);cx.lineTo(8,-2);cx.moveTo(-6,8);cx.lineTo(22,4);cx.stroke();
+      break;}
+    case "lookout":{
+      /* a summit viewpoint platform + railing at the cliff edge */
+      cx.fillStyle="rgba(0,0,0,.16)";cx.beginPath();cx.ellipse(3,5,20,9,0,0,7);cx.fill();
+      cx.fillStyle=isNight?"#4a4036":"#9c8463";
+      cx.beginPath();cx.moveTo(-16,8);cx.lineTo(-12,-6);cx.lineTo(12,-6);cx.lineTo(16,8);cx.closePath();cx.fill();
+      cx.strokeStyle=isNight?"#6a5c4a":"#6e5a3e";cx.lineWidth=1.5;cx.beginPath();cx.moveTo(-13,-1);cx.lineTo(13,-1);cx.stroke();
+      cx.fillStyle=isNight?"#7a6c58":"#cdb98c";for(let i=0;i<6;i++)cx.fillRect(-11+i*4.4,-9,1.6,4);
+      break;}
+    case "eagle":{
+      /* a bald eagle soaring (broad wings, white head + tail) */
+      const efl=Math.sin(state.t*2.2+(l.ph||0)*2)*0.18;
+      cx.save();cx.rotate(Math.sin(state.t*0.3+(l.ph||0))*0.5);
+      cx.fillStyle="rgba(0,0,0,.18)";cx.beginPath();cx.ellipse(0,16,16,5,0,0,7);cx.fill();
+      const eb=isNight?"#2a2620":"#3c3026";
+      cx.fillStyle=eb;cx.beginPath();cx.moveTo(0,0);cx.lineTo(-22,-8+efl*20);cx.lineTo(-20,-2+efl*20);cx.lineTo(0,4);cx.lineTo(20,-2+efl*20);cx.lineTo(22,-8+efl*20);cx.closePath();cx.fill();
+      cx.fillRect(-2,0,4,12);
+      cx.fillStyle=isNight?"#d8dce0":"#f4f5f7";cx.beginPath();cx.arc(0,-2,2.6,0,7);cx.fill();
+      cx.beginPath();cx.moveTo(-2,12);cx.lineTo(2,12);cx.lineTo(0,16);cx.closePath();cx.fill();
+      cx.fillStyle="#e8a83a";cx.beginPath();cx.arc(0,-4,1,0,7);cx.fill();
+      cx.restore();
       break;}
     case "gull":{
       /* a gull bobbing on the water */
@@ -2458,6 +2574,66 @@ function drawLandSprite(l,p,f){
       for(let i=0;i<22;i++){const a=i*1.7,r=w*0.05+((i*53)%(w*0.22));
         cx.fillStyle=blooms[i%blooms.length];cx.beginPath();cx.arc(x+Math.cos(a)*r,y+w*0.04+Math.sin(a)*r*0.5,w*0.025,0,7);cx.fill();}
       break;}
+    case "skywalk":{
+      const w=150*sc;
+      cx.fillStyle=isNight?"#4a3a28":"#8a6a42";
+      cx.beginPath();cx.moveTo(x-w*0.16,y);cx.lineTo(x-w*0.10,y-w*0.62);cx.lineTo(x+w*0.10,y-w*0.62);cx.lineTo(x+w*0.16,y);cx.closePath();cx.fill();
+      cx.strokeStyle=isNight?"#3a2e20":"#6e5436";cx.lineWidth=Math.max(1,w*0.012);
+      for(let i=-2;i<=2;i++){const t=i/2.4;cx.beginPath();cx.moveTo(x+t*w*0.16,y);cx.lineTo(x+t*w*0.10,y-w*0.62);cx.stroke();}
+      cx.strokeStyle=isNight?"#6b5238":"#bd935c";cx.lineWidth=Math.max(1.5,w*0.02);cx.beginPath();
+      for(let k=0;k<=14;k++){const yy=y-w*0.05-k*w*0.04, xx=x+Math.sin(k*0.9)*w*0.12*(1-k*0.02); if(k===0)cx.moveTo(xx,yy);else cx.lineTo(xx,yy);}
+      cx.stroke();
+      cx.fillStyle=isNight?"#5a4631":"#9a7648";cx.beginPath();cx.ellipse(x,y-w*0.62,w*0.22,w*0.05,0,0,7);cx.fill();
+      cx.strokeStyle=isNight?"#8aa0aa":"#cfe0e6";cx.lineWidth=1;
+      for(let i=-3;i<=3;i++){cx.beginPath();cx.moveTo(x+i*w*0.06,y-w*0.62);cx.quadraticCurveTo(x+i*w*0.03,y-w*0.74,x,y-w*0.76);cx.stroke();}
+      cx.beginPath();cx.ellipse(x,y-w*0.7,w*0.14,w*0.03,0,0,7);cx.stroke();
+      if(isNight){cx.fillStyle="rgba(255,228,150,.5)";cx.fillRect(x-w*0.02,y-w*0.66,w*0.04,w*0.04);}
+      break;}
+    case "peak":{
+      const w=300*sc;
+      const pf=isNight?"#2a333a":"#8fa0ac", psn=isNight?"#4a5560":"#e6eef2";
+      cx.fillStyle=pf;cx.beginPath();
+      cx.moveTo(x-w*0.5,y);cx.lineTo(x-w*0.20,y-w*0.32);cx.lineTo(x-w*0.02,y-w*0.16);cx.lineTo(x+w*0.16,y-w*0.40);cx.lineTo(x+w*0.34,y-w*0.18);cx.lineTo(x+w*0.5,y-w*0.06);cx.lineTo(x+w*0.5,y);cx.closePath();cx.fill();
+      cx.fillStyle=psn;
+      cx.beginPath();cx.moveTo(x+w*0.16,y-w*0.40);cx.lineTo(x+w*0.22,y-w*0.30);cx.lineTo(x+w*0.08,y-w*0.30);cx.closePath();cx.fill();
+      cx.beginPath();cx.moveTo(x-w*0.20,y-w*0.32);cx.lineTo(x-w*0.14,y-w*0.23);cx.lineTo(x-w*0.27,y-w*0.23);cx.closePath();cx.fill();
+      break;}
+    case "fir":{
+      const w=130*sc, fs=1+0.05*Math.sin(state.t*1.1+(l.ph||0)*3);
+      cx.fillStyle=isNight?"#3a2a1c":"#5a4028";cx.fillRect(x-w*0.02,y-w*0.06,w*0.04,w*0.12);
+      const fg1=isNight?"#163019":"#1f5226", fg2=isNight?"#1d3a22":"#2a6a34";
+      cx.fillStyle=fg1;cx.beginPath();cx.moveTo(x,y-w*0.66*fs);cx.lineTo(x-w*0.2,y-w*0.04);cx.lineTo(x+w*0.2,y-w*0.04);cx.closePath();cx.fill();
+      cx.fillStyle=fg2;
+      cx.beginPath();cx.moveTo(x,y-w*0.66*fs);cx.lineTo(x-w*0.15,y-w*0.22);cx.lineTo(x+w*0.15,y-w*0.22);cx.closePath();cx.fill();
+      cx.beginPath();cx.moveTo(x,y-w*0.5*fs);cx.lineTo(x-w*0.17,y-w*0.12);cx.lineTo(x+w*0.17,y-w*0.12);cx.closePath();cx.fill();
+      break;}
+    case "bluff":{
+      const w=170*sc;
+      const bk=isNight?"#3a3c40":"#7c7670", bk2=isNight?"#46484c":"#938c84", btop=isNight?"#1d3a22":"#2c6a34";
+      cx.fillStyle=bk;cx.beginPath();cx.moveTo(x-w*0.3,y);cx.lineTo(x-w*0.26,y-w*0.34);cx.lineTo(x-w*0.06,y-w*0.44);cx.lineTo(x+w*0.16,y-w*0.36);cx.lineTo(x+w*0.3,y-w*0.12);cx.lineTo(x+w*0.3,y);cx.closePath();cx.fill();
+      cx.fillStyle=bk2;cx.beginPath();cx.moveTo(x-w*0.26,y-w*0.34);cx.lineTo(x-w*0.06,y-w*0.44);cx.lineTo(x-w*0.02,y-w*0.2);cx.lineTo(x-w*0.2,y-w*0.14);cx.closePath();cx.fill();
+      cx.strokeStyle=isNight?"#26282b":"#5d574f";cx.lineWidth=Math.max(1,w*0.008);
+      cx.beginPath();cx.moveTo(x-w*0.26,y-w*0.2);cx.lineTo(x+w*0.2,y-w*0.1);cx.moveTo(x-w*0.22,y-w*0.08);cx.lineTo(x+w*0.24,y-w*0.02);cx.stroke();
+      cx.fillStyle=btop;for(let i=0;i<4;i++){const tx=x-w*0.2+i*w*0.1;cx.beginPath();cx.moveTo(tx,y-w*0.4);cx.lineTo(tx-w*0.04,y-w*0.32);cx.lineTo(tx+w*0.04,y-w*0.32);cx.closePath();cx.fill();}
+      break;}
+    case "lookout":{
+      const w=120*sc;
+      cx.fillStyle=isNight?"#3e352c":"#8a7456";
+      cx.beginPath();cx.moveTo(x-w*0.22,y);cx.lineTo(x-w*0.16,y-w*0.06);cx.lineTo(x+w*0.16,y-w*0.06);cx.lineTo(x+w*0.22,y);cx.closePath();cx.fill();
+      cx.fillStyle=isNight?"#4a4036":"#9c8463";cx.fillRect(x-w*0.2,y-w*0.02,w*0.4,w*0.03);
+      cx.strokeStyle=isNight?"#6a5c4a":"#cdb98c";cx.lineWidth=Math.max(1,w*0.015);
+      for(let i=0;i<=6;i++){const px=x-w*0.18+i*w*0.06;cx.beginPath();cx.moveTo(px,y-w*0.02);cx.lineTo(px,y-w*0.13);cx.stroke();}
+      cx.beginPath();cx.moveTo(x-w*0.18,y-w*0.13);cx.lineTo(x+w*0.18,y-w*0.13);cx.stroke();
+      cx.fillStyle=isNight?"#2a2d34":"#445566";cx.fillRect(x+w*0.06,y-w*0.2,w*0.03,w*0.08);
+      cx.beginPath();cx.arc(x+w*0.075,y-w*0.2,w*0.03,0,7);cx.fill();
+      break;}
+    case "eagle":{
+      const w=120*sc, efl=Math.sin(state.t*2.0+(l.ph||0)*2)*0.14;
+      const eb=isNight?"#2a2620":"#3c3026";
+      cx.fillStyle=eb;cx.beginPath();cx.moveTo(x,y);cx.lineTo(x-w*0.3,y-w*0.1+efl*w*0.2);cx.lineTo(x-w*0.26,y-w*0.02+efl*w*0.2);cx.lineTo(x,y+w*0.04);cx.lineTo(x+w*0.26,y-w*0.02+efl*w*0.2);cx.lineTo(x+w*0.3,y-w*0.1+efl*w*0.2);cx.closePath();cx.fill();
+      cx.fillStyle=isNight?"#d8dce0":"#f4f5f7";cx.beginPath();cx.arc(x,y-w*0.02,w*0.035,0,7);cx.fill();
+      cx.fillStyle="#e8a83a";cx.beginPath();cx.arc(x,y-w*0.04,w*0.014,0,7);cx.fill();
+      break;}
     case "gull":{
       const w=90*sc, bob=Math.sin(state.t*1.6+l.x)*w*0.015;
       cx.save();cx.translate(0,bob);
@@ -3077,7 +3253,9 @@ const LANDMARK_SUB={
   "Mile 0":"End of the Trans-Canada",
   "Beacon Hill Park":"200 Acres of Coastline",
   "Craigdarroch Castle":"Victorian Landmark",
-  "Red Fish Blue Fish":"Dockside Fish & Chips"
+  "Red Fish Blue Fish":"Dockside Fish & Chips",
+  "Malahat SkyWalk":"A Spiral Walk in the Sky",
+  "Summit Lookout":"High Over Saanich Inlet"
 };
 function checkCallouts(){
   if(!player||!state.started||player.finished)return;
@@ -4131,7 +4309,7 @@ function endTitle(){
 buildTrack(false);
 renderGarage();
 startTitle();
-(function(){const b=document.getElementById("buildtag");if(b)b.textContent="engine ready · v45";})();
+(function(){const b=document.getElementById("buildtag");if(b)b.textContent="engine ready · v46";})();
 let last=performance.now();
 let frameErrs=0;
 function loop(now){
