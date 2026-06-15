@@ -209,7 +209,7 @@
 <div class="tc" id="tc-boost">&#9889;</div>
 <div id="kbd-legend">
   <b>V</b> view (cockpit/chase/bumper/top) &nbsp; <b>P</b> pit &nbsp; <b>R</b> mirrors &nbsp; <b>N</b> music &nbsp; <b>M</b> mute
-  &nbsp;<span style="opacity:.5">·</span>&nbsp; <span class="vtag">v48</span>
+  &nbsp;<span style="opacity:.5">·</span>&nbsp; <span class="vtag">v49</span>
 </div>
 <div id="tc-strip">
   <div class="tcbtn" id="tc-view"><span class="ic">◱</span><span class="lb">VIEW</span></div>
@@ -531,7 +531,7 @@ function buildTrack(rev){
 }
 function lp(i){return line[((i%N)+N)%N];}
 /* --- elevation (only The Malahat is hilly; every other circuit stays perfectly flat) --- */
-const MAL_CLIMB=205, MAL_ROLL=27;
+const MAL_CLIMB=340, MAL_ROLL=32;
 function elevAtIdx(i){ return elev?elev[(((i|0)%N)+N)%N]:0; }
 function gradeAtIdx(i){
   if(!elev) return 0;
@@ -612,7 +612,7 @@ function applyDamage(c,severity){
 }
 let cars=[], player=null, LAPS=3;
 let qualiGrid=null;
-const BASELAP={harbour:41, gorge:32, sidney:35.5, malahat:28};   /* per-circuit reference lap for the quali grid */
+const BASELAP={harbour:41, gorge:32, sidney:35.5, malahat:29};   /* per-circuit reference lap for the quali grid */
 function playerStats(){
   const v=1+vetBonus();
   return {
@@ -4334,7 +4334,7 @@ function endTitle(){
 buildTrack(false);
 renderGarage();
 startTitle();
-(function(){const b=document.getElementById("buildtag");if(b)b.textContent="engine ready · v48";})();
+(function(){const b=document.getElementById("buildtag");if(b)b.textContent="engine ready · v49";})();
 let last=performance.now();
 let frameErrs=0;
 function loop(now){
