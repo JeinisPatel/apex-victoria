@@ -208,8 +208,8 @@
 <div class="tc" id="tc-throttle">&#9650;</div>
 <div class="tc" id="tc-boost">&#9889;</div>
 <div id="kbd-legend">
-  <b>V</b> view &nbsp; <b>P</b> pit &nbsp; <b>R</b> mirrors &nbsp; <b>N</b> music &nbsp; <b>M</b> mute
-  &nbsp;<span style="opacity:.5">·</span>&nbsp; <span class="vtag">v41</span>
+  <b>V</b> view (cockpit/chase/top) &nbsp; <b>P</b> pit &nbsp; <b>R</b> mirrors &nbsp; <b>N</b> music &nbsp; <b>M</b> mute
+  &nbsp;<span style="opacity:.5">·</span>&nbsp; <span class="vtag">v42</span>
 </div>
 <div id="tc-strip">
   <div class="tcbtn" id="tc-view"><span class="ic">◱</span><span class="lb">VIEW</span></div>
@@ -384,15 +384,15 @@ function vetBonus(){return Math.min(10,(meta.lvl-1))*0.01;}
 function title(){return TITLES[Math.min(TITLES.length-1,meta.lvl-1)];}
 
 const EVENTS=[
-  {name:"Inner Harbour Sprint",laps:3,rev:false,night:false,tod:"day",ai:[0.82,0.93],mult:1.0,wx:"dry",
+  {name:"Inner Harbour Sprint",laps:3,rev:false,night:false,tod:"day",ai:[0.88,0.94],mult:1.0,wx:"dry",
    desc:"A short, scrappy opener along Belleville Street. The grid is green and so are you."},
-  {name:"Victoria Grand Prix",laps:6,rev:false,night:false,tod:"dusk",ai:[0.87,0.98],mult:1.2,wx:"damp",
+  {name:"Victoria Grand Prix",laps:6,rev:false,night:false,tod:"dusk",ai:[0.92,0.98],mult:1.2,wx:"damp",
    desc:"The full tour of the capital — Legislature to Chinatown to Mile 0. Brake markers matter now."},
-  {name:"Mirror Harbour",laps:6,rev:true,night:true,tod:"night",ai:[0.90,1.01],mult:1.4,wx:"dry",
+  {name:"Mirror Harbour",laps:6,rev:true,night:true,tod:"night",ai:[0.95,1.01],mult:1.4,wx:"dry",
    desc:"The streets of Victoria run backwards. Every braking point you learned is now a trap."},
-  {name:"Island Endurance",laps:8,rev:false,night:false,tod:"dusk",ai:[0.93,1.04],mult:1.7,wx:"dry",
+  {name:"Island Endurance",laps:8,rev:false,night:false,tod:"dusk",ai:[0.98,1.04],mult:1.7,wx:"dry",
    desc:"Five laps of the capital. Consistency beats heroics — the gravel at Beacon Hill costs podiums."},
-  {name:"Midnight at the Legislature",laps:7,rev:true,night:true,tod:"night",ai:[0.96,1.07],mult:2.0,wx:"wet",
+  {name:"Midnight at the Legislature",laps:7,rev:true,night:true,tod:"night",ai:[1.01,1.07],mult:2.0,wx:"wet",
    desc:"Reversed, under the Legislature\u2019s ten thousand lights, against the fastest grid of the season."},
 ];
 const PTS=[10,8,6,5,4,3,2,1];
@@ -538,7 +538,8 @@ function bakeTrack(){
 const BASE={MAXV:560,ACC:300,BRK:560,TURN:2.6};
 const DRAG=0.42, OFFROAD=2.2;
 const DAMAGE_ON=()=>meta.diff===2;          /* Ace only */
-const HARD_HIT=190;                          /* closing-speed threshold for a damaging car hit */
+const HARD_HIT=190;                          /* closing-speed threshold for a damaging car hit (player involved) */
+const AI_HARD_HIT=330;                       /* AI-vs-AI needs a much bigger shunt -> no pack-wide attrition */
 const OFF_HIT=300;                           /* speed threshold for a damaging off / wall moment */
 function applyDamage(c,severity){
   if(!DAMAGE_ON()||c.dnf||c.finished)return;
@@ -583,7 +584,7 @@ function addCar(i,isPlayer,ev,gridPos){
     lapStart:0, lastLap:0, bestLap:0, finished:false, finishT:0,
     maxv:ps?ps.maxv:BASE.MAXV, acc:ps?ps.acc:BASE.ACC, brk:ps?ps.brk:BASE.BRK, turnR:ps?ps.turn:BASE.TURN,
     skill:isPlayer?1:(ev.ai[0]+Math.random()*(ev.ai[1]-ev.ai[0]))*DIFFS[meta.diff].mul,
-    aiOff:(Math.random()-0.5)*0.9, drift:0, slip:0,
+    aiOff:(Math.random()-0.5)*0.66, drift:0, slip:0,
     boost:ps?ps.boostMax:2, boostT:0, draftT:0, defendT:0, lastLane:0,
     tyre:1, pitT:0, pitStops:0, pitCool:0, wantPit:false,
     braking:0, backfire:0, prevBrk:0, bfCool:0,
@@ -594,7 +595,7 @@ const keys={};
 addEventListener("keydown",e=>{keys[e.key.toLowerCase()]=true;
   if(["arrowup","arrowdown","arrowleft","arrowright"," "].includes(e.key.toLowerCase()))e.preventDefault();
   if(e.key==="Shift")tryBoost();
-  if(e.key.toLowerCase()==="v")state.view=state.view==="cockpit"?"top":"cockpit";
+  if(e.key.toLowerCase()==="v")state.view={cockpit:"chase",chase:"top",top:"cockpit"}[state.view]||"cockpit";
   if(e.key.toLowerCase()==="k"&&state.running&&replayBuf.length>10)openReplay();
   if(state.replay){
     if(e.key===" "){state.replayPlaying=!state.replayPlaying;e.preventDefault&&e.preventDefault();}
@@ -671,8 +672,11 @@ function stepCar(c,dt){
     /* corner speed: look further, brake later as skill rises */
     let worst=0;
     for(let k=8;k<82;k+=5) worst=Math.max(worst,curv[((c.idx+k)%N+N)%N]/(1+k*0.018));
-    const brakeBias=1-worst*(3.9-c.skill*0.7);
-    const vTarget=c.maxv*c.skill*Math.max(0.4,brakeBias);
+    const brakeBias=1-worst*(3.75-c.skill*0.75);
+    let vTarget=c.maxv*c.skill*Math.max(0.43,brakeBias);
+    /* anti-rear-end: tucked right behind a car and not yet pulled offline -> match its pace, don't plough in */
+    if(ahead&&aheadGap<2.4){const dd=Math.hypot(ahead.x-c.x,ahead.y-c.y);
+      if(dd<46)vTarget=Math.min(vTarget, Math.max(ahead.v+24, c.maxv*0.55));}   /* ease, but never crawl */
     thr=c.v<vTarget?1:0; brk=c.v>vTarget*1.1?1:0;
     /* slipstream: tuck behind a close car ahead and gain top speed */
     if(ahead&&aheadGap<3.2){const dd=Math.hypot(ahead.x-c.x,ahead.y-c.y);
@@ -737,7 +741,9 @@ function stepCar(c,dt){
   const boosting=c.boostT>0;
   if(boosting)c.boostT-=dt;
   const drafting=c.draftT>0;
-  const acc=c.acc*(boosting?1.6:1)*(0.7+0.3*traction), vmax=c.maxv*(boosting?1.18:1)*(drafting?1.07:1)*dmgTop;
+  const aiPace=1+Math.max(0,c.skill-1)*0.42;    /* quick AI carry real top speed (player skill=1 -> x1) */
+  const aiPunch=1+Math.max(0,c.skill-1)*0.3;    /* ...and more drive off the corners */
+  const acc=c.acc*(boosting?1.6:1)*(0.7+0.3*traction)*aiPunch, vmax=c.maxv*(boosting?1.18:1)*(drafting?1.07:1)*dmgTop*aiPace;
   c.v+=thr*acc*dt*(1-c.v/vmax*0.55);
   c.v-=brk*c.brk*dt*(0.6+0.4*traction);
   c.v-=c.v*DRAG*dt;
@@ -814,7 +820,8 @@ function collide(){
       const avg=(a.v+b.v)/2; a.v=a.v*0.6+avg*0.35; b.v=b.v*0.6+avg*0.35;
       /* hard, fast contact damages both cars (Ace only) */
       const closing=dv+Math.abs(avg)*0.15;
-      if(closing>HARD_HIT){applyDamage(a,1);applyDamage(b,1);}
+      if(a.isPlayer||b.isPlayer){ if(closing>HARD_HIT){applyDamage(a,1);applyDamage(b,1);} }   /* player risk preserved */
+      else if(closing>AI_HARD_HIT){ applyDamage((a.totalProg<b.totalProg)?a:b,1); }            /* AI: only the car at fault, big hits only */
     }
   }
 }
@@ -1190,7 +1197,7 @@ function update(dt){
     const steps=[
       [0.3,"Hold <b>throttle</b> (↑ / W or the pedal) to launch"],
       [4,"<b>Brake</b> (↓ / S) before the corners — the racing line is dashed"],
-      [8.5,"Tap <b>V</b> to switch cockpit / top view"],
+      [8.5,"Tap <b>V</b> to cycle cockpit / chase / top view"],
       [12.5,"On the long races, press <b>P</b> to pit for fresh tyres"],
       [16.5,"<b>Esc</b> (or II) pauses. Good luck out there!"],
     ];
@@ -1313,7 +1320,7 @@ function update(dt){
       const lb=mus.querySelector&&mus.querySelector(".lb");if(lb)lb.textContent=music.on?TRACKS[trackIdx].n.slice(0,4).toUpperCase():"MUS";}
     const mut=document.getElementById("tc-mute");if(mut){mut.classList.toggle("off",muted);mut.classList.toggle("alert",muted);}
     const pit=document.getElementById("tc-pit");if(pit)pit.classList.toggle("armed",!!(player&&player.wantPit));
-    const vw=document.getElementById("tc-view");if(vw){const lb=vw.querySelector&&vw.querySelector(".lb");if(lb)lb.textContent=state.view==="cockpit"?"TOP":"COCK";}
+    const vw=document.getElementById("tc-view");if(vw){const lb=vw.querySelector&&vw.querySelector(".lb");if(lb)lb.textContent={cockpit:"CHASE",chase:"TOP",top:"COCK"}[state.view]||"COCK";}
   }
   const yf=document.getElementById("yellow-flag");
   if(yf)yf.style.display=(state.yellowT>0&&state.started)?"block":"none";
@@ -3006,7 +3013,7 @@ function checkCallouts(){
 }
 
 /* ---------------- render ---------------- */
-/* Two views: V toggles cockpit (perspective) and top-down. */
+/* Three views: V cycles cockpit (first person) / chase (third person) / top-down. */
 
 function drawCarTop(c,camX,camY){
   const px=c.x-camX, py=c.y-camY;
@@ -3161,7 +3168,9 @@ const CAM={H:24, BACK:10, NEAR:7, AHEAD:240};
 function drawCockpit(){
   const yaw=player.a;
   const cyaw=Math.cos(yaw), syaw=Math.sin(yaw);
-  const camx=player.x-cyaw*CAM.BACK, camy=player.y-syaw*CAM.BACK;
+  const chase=state.view==="chase";                          /* third-person follow camera */
+  const camBack=chase?98:CAM.BACK, camH=chase?42:CAM.H;
+  const camx=player.x-cyaw*camBack, camy=player.y-syaw*camBack;
   /* FOV: a wider field at speed = lower focal length, so the world rushes past faster */
   const f=VH*0.95*(1-0.16*(state.camFov||0));
   /* horizon pitches: dips DOWN (horizon rises) under braking, lifts under power */
@@ -3184,7 +3193,7 @@ function drawCockpit(){
     const zc=dx*cyaw+dy*syaw;
     const xc=-dx*syaw+dy*cyaw;
     const inv=zc>0.01?1/zc:0;
-    return {z:zc, x:VW/2+xc*inv*f+shakeX, y:HOR+CAM.H*inv*f+shakeY};
+    return {z:zc, x:VW/2+xc*inv*f+shakeX, y:HOR+camH*inv*f+shakeY};
   }
   /* sky */
   const dusking=state.todMode==="dusk" && state.tod>0.1 && state.tod<0.95;
@@ -3308,7 +3317,7 @@ function drawCockpit(){
   /* other cars as perspective sprites */
   const sprites=[];
   for(const c of cars){
-    if(c===player)continue;
+    if(c===player&&!chase)continue;          /* in chase view we DO draw our own car */
     let di=c.idx-base; if(di>N/2)di-=N; if(di<-N/2)di+=N;
     if(di<-12||di>CAM.AHEAD)continue;
     const p=proj(c.x,c.y);
@@ -3343,8 +3352,9 @@ function drawCockpit(){
     hl.addColorStop(0,"rgba(255,244,206,.16)");hl.addColorStop(1,"rgba(255,244,206,0)");
     cx.fillStyle=hl;cx.fillRect(0,HOR-20,VW,VH-HOR+20);
   }
-  if(state.mirrors)drawMirrors(cyaw,syaw,f,HOR,shakeX,shakeY);
-  drawCockpitOverlay();
+  if(state.mirrors&&!chase)drawMirrors(cyaw,syaw,f,HOR,shakeX,shakeY);
+  if(chase){ drawRain(); drawFogGlare(); drawSpeedFX(); }   /* FX only; no cockpit frame */
+  else drawCockpitOverlay();
   if(player.boostT>0){
     cx.strokeStyle="rgba(57,210,192,"+(0.25+0.2*Math.sin(state.t*30))+")";
     cx.lineWidth=10;cx.strokeRect(5,5,VW-10,VH-10);
@@ -3913,7 +3923,7 @@ if(touchMode&&typeof document.body!=="undefined"&&document.body){
   if(bb&&bb.addEventListener)bb.addEventListener("pointerdown",e=>{e.preventDefault();initAudio();tryBoost();});
   function tap(id,fn){const el=document.getElementById(id);
     if(el&&el.addEventListener)el.addEventListener("pointerdown",e=>{e.preventDefault();fn();});}
-  tap("tc-view",()=>{state.view=state.view==="cockpit"?"top":"cockpit";});
+  tap("tc-view",()=>{state.view={cockpit:"chase",chase:"top",top:"cockpit"}[state.view]||"cockpit";});
   tap("tc-pit",()=>{if(state.started&&player&&!player.finished){player.wantPit=!player.wantPit;
     flash(player.wantPit?"PIT ARMED":"PIT CANCELLED");}});
   tap("tc-mirror",()=>{state.mirrors=!state.mirrors;flash(state.mirrors?"MIRRORS ON":"MIRRORS OFF");});
@@ -4005,7 +4015,7 @@ function endTitle(){
 buildTrack(false);
 renderGarage();
 startTitle();
-(function(){const b=document.getElementById("buildtag");if(b)b.textContent="engine ready · v41";})();
+(function(){const b=document.getElementById("buildtag");if(b)b.textContent="engine ready · v42";})();
 let last=performance.now();
 let frameErrs=0;
 function loop(now){
