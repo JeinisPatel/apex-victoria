@@ -209,7 +209,7 @@
 <div class="tc" id="tc-boost">&#9889;</div>
 <div id="kbd-legend">
   <b>V</b> view &nbsp; <b>P</b> pit &nbsp; <b>R</b> mirrors &nbsp; <b>N</b> music &nbsp; <b>M</b> mute
-  &nbsp;<span style="opacity:.5">·</span>&nbsp; <span class="vtag">v40</span>
+  &nbsp;<span style="opacity:.5">·</span>&nbsp; <span class="vtag">v41</span>
 </div>
 <div id="tc-strip">
   <div class="tcbtn" id="tc-view"><span class="ic">◱</span><span class="lb">VIEW</span></div>
@@ -1389,6 +1389,8 @@ const LAND_HARBOUR=[
   {x:2700,y:610, t:"gate", label:"Chinatown Gate"},
   {x:1870,y:250, t:"bridge",label:"Johnson St Bridge"},
   {x:300, y:1430,t:"wharf",label:"Fisherman's Wharf"},
+  {x:315, y:883, t:"reef", label:"The Reef"},               /* JP's building at 21 Erie St */
+  {x:180, y:1700,t:"navy", label:"CFB Esquimalt"},          /* the naval dockyard next door */
   {x:520, y:2560,t:"light",label:"Ogden Point"},
   {x:1889,y:2242,t:"mile0",label:"Mile 0"},
   {x:2311,y:2216,t:"park", label:"Beacon Hill Park"},
@@ -1696,24 +1698,81 @@ function drawLandTop(l,camX,camY){
       cx.fillStyle="#8f8c84";cx.fillRect(-34,9,30,10);
       break;}
     case "wharf":{
-      cx.fillStyle="#8f8c84";cx.fillRect(-58,12,116,6);
-      const cols=["#c0392b","#3a6ea8","#e8c23a","#2e7d8a"];
-      for(let i=0;i<4;i++){cx.fillStyle=cols[i];cx.fillRect(-54+i*28,(i%2)*8-12,24,22);
-        cx.fillStyle="#eef0f4";cx.fillRect(-54+i*28,(i%2)*8-12,24,4);}
+      /* a finger dock with two rows of colourful floating homes + a fish kiosk */
+      cx.fillStyle=isNight?"#3a352a":"#9a8458";cx.fillRect(-66,-2,132,10);          /* main dock */
+      cx.fillStyle=isNight?"#2a2620":"#7a6848";for(let dx=-64;dx<66;dx+=8)cx.fillRect(dx,-2,1.5,10);
+      cx.fillStyle=isNight?"#3a352a":"#9a8458";cx.fillRect(-4,8,8,26);              /* finger out */
+      const cols=["#c0392b","#3a6ea8","#e8c23a","#2e7d8a","#d4663a","#5a9a6a"];
+      for(let i=0;i<6;i++){const ox=-58+i*20, oy=(i%2)?-26:-22, hh=(i%2)?20:16;
+        cx.fillStyle=cols[i];cx.fillRect(ox,oy,17,hh);
+        cx.fillStyle=isNight?"#2a2620":"#eef0f4";cx.fillRect(ox,oy,17,4);            /* roof */
+        cx.fillStyle=isNight?"#caa84a":"#1c2733";cx.fillRect(ox+5,oy+8,5,6);}        /* window */
+      /* Red Fish Blue Fish style kiosk on the dock */
+      cx.fillStyle="#c43a2e";cx.fillRect(40,-16,20,16);cx.fillStyle="#2e6da4";cx.fillRect(40,-16,20,4);
+      break;}
+    case "reef":{
+      /* The Reef, 21 Erie St — curved-glass corner towers, stepped balconies, peaked roof */
+      cx.fillStyle="rgba(0,0,0,.2)";cx.beginPath();cx.ellipse(3,6,40,26,0,0,7);cx.fill();
+      /* stone base */
+      cx.fillStyle=isNight?"#3a3833":"#8a8276";cx.fillRect(-34,12,68,12);
+      /* main body — tan with brown accent + green glass */
+      const tan=isNight?"#4a4438":"#cabfa2", brown=isNight?"#3a2c22":"#7a5a44", glass=isNight?"#1c3a4a":"#9fcadf";
+      cx.fillStyle=tan;cx.fillRect(-30,-20,60,34);
+      cx.fillStyle=brown;cx.fillRect(6,-20,10,34);                                   /* brown stripe */
+      /* glass bands (balcony fronts) */
+      cx.fillStyle=glass;for(let r=0;r<4;r++)cx.fillRect(-28,-16+r*8,56,4);
+      /* the two curved glass corner towers */
+      cx.fillStyle=glass;cx.beginPath();cx.arc(-30,-3,11,Math.PI*0.5,Math.PI*1.5);cx.fill();
+      cx.fillStyle=isNight?"#244a5c":"#7fb4cc";cx.beginPath();cx.arc(-30,-3,11,Math.PI*1.5,Math.PI*0.5);cx.fill();
+      /* stepped balconies down the right */
+      cx.fillStyle=tan;for(let r=0;r<3;r++)cx.fillRect(24+r*4,-12+r*9,12-r*2,7);
+      /* angular peaked roof crown */
+      cx.fillStyle=isNight?"#2c2622":"#b0a48c";
+      cx.beginPath();cx.moveTo(-30,-20);cx.lineTo(-22,-30);cx.lineTo(-14,-22);cx.lineTo(-6,-31);cx.lineTo(2,-20);cx.closePath();cx.fill();
+      if(isNight){cx.fillStyle="rgba(255,228,150,.5)";for(let r=0;r<4;r++)cx.fillRect(-28,-16+r*8,56,2);}
+      break;}
+    case "navy":{
+      /* CFB Esquimalt: a grey naval frigate alongside a jetty + a dockyard crane */
+      cx.fillStyle=isNight?"#2a2c30":"#5a6068";cx.fillRect(-50,14,100,8);            /* jetty */
+      /* the warship hull (haze grey) */
+      const grey=isNight?"#3a4048":"#6e757e", greyD=isNight?"#2a3036":"#565c64";
+      cx.fillStyle=grey;cx.beginPath();
+      cx.moveTo(-56,-4);cx.lineTo(-48,-12);cx.lineTo(48,-12);cx.lineTo(60,-2);cx.lineTo(54,6);cx.lineTo(-50,6);cx.closePath();cx.fill();
+      cx.fillStyle=greyD;cx.fillRect(-44,-12,88,3);                                  /* deck line */
+      /* superstructure + hangar + mast */
+      cx.fillStyle=greyD;cx.fillRect(-20,-24,30,12);cx.fillRect(14,-20,16,8);
+      cx.fillStyle=grey;cx.fillRect(-8,-36,5,12);                                    /* mast */
+      cx.fillStyle="#2a2c30";cx.fillRect(-2,-30,3,8);                                /* radar */
+      /* gun turret forward + hull number */
+      cx.fillStyle=greyD;cx.fillRect(-40,-10,10,5);
+      cx.fillStyle=isNight?"#aab0b8":"#d8dce2";cx.font="bold 7px sans-serif";cx.textAlign="center";cx.fillText("331",-30,-2);
+      /* dockyard crane behind */
+      cx.strokeStyle=isNight?"#caa84a":"#e8a83a";cx.lineWidth=3;
+      cx.beginPath();cx.moveTo(44,20);cx.lineTo(44,-22);cx.lineTo(66,-14);cx.stroke();
       break;}
     case "light":{
-      cx.strokeStyle=isNight?"#55534c":"#9a978f";cx.lineWidth=18;
-      cx.beginPath();cx.moveTo(0,0);cx.lineTo(295,-218);cx.stroke();
-      cx.strokeStyle="rgba(0,0,0,.3)";cx.lineWidth=2;
-      cx.beginPath();cx.moveTo(5,-8);cx.lineTo(300,-226);cx.stroke();
-      if(isNight){const g=cx.createRadialGradient(0,0,4,0,0,90);
-        g.addColorStop(0,"rgba(255,240,190,.5)");g.addColorStop(1,"rgba(255,240,190,0)");
-        cx.fillStyle=g;cx.beginPath();cx.arc(0,0,90,0,7);cx.fill();
-        cx.strokeStyle="rgba(255,240,190,.35)";cx.lineWidth=5;
-        cx.beginPath();cx.moveTo(0,0);cx.lineTo(Math.cos(state.t*0.8)*130,Math.sin(state.t*0.8)*130);cx.stroke();}
+      /* the long Ogden Point breakwater striding out to the lighthouse */
+      const ex=295, ey=-218;
+      cx.strokeStyle=isNight?"#55534c":"#9a978f";cx.lineWidth=20;          /* concrete deck */
+      cx.beginPath();cx.moveTo(0,0);cx.lineTo(ex,ey);cx.stroke();
+      cx.strokeStyle=isNight?"#3a3833":"#b8b4a8";cx.lineWidth=5;            /* the painted Salish Sea mural stripe */
+      cx.beginPath();cx.moveTo(2,-9);cx.lineTo(ex+2,ey-9);cx.stroke();
+      if(!isNight){cx.lineWidth=3;
+        for(let i=0;i<12;i++){const t=i/12;cx.strokeStyle=["#e8b84a","#2e9ad4","#c43a2e","#3a8f74"][i%4];
+          cx.beginPath();cx.moveTo(2+ex*t,-9+ey*t);cx.lineTo(2+ex*(t+0.06),-9+ey*(t+0.06));cx.stroke();}}
+      cx.strokeStyle="rgba(0,0,0,.25)";cx.lineWidth=1.5;                    /* rail shadow */
+      cx.beginPath();cx.moveTo(4,8);cx.lineTo(ex+4,ey+8);cx.stroke();
+      /* lighthouse base + tower */
       cx.fillStyle="#c0392b";cx.beginPath();cx.arc(0,0,15,0,7);cx.fill();
       cx.fillStyle="#eef0f4";cx.beginPath();cx.arc(0,0,9,0,7);cx.fill();
       cx.fillStyle="#c0392b";cx.beginPath();cx.arc(0,0,3.5,0,7);cx.fill();
+      /* the flashing beacon — pulses day AND night */
+      const flash=Math.pow(Math.max(0,Math.sin(state.t*2.2)),6);
+      if(flash>0.04){const g=cx.createRadialGradient(0,0,2,0,0,70);
+        g.addColorStop(0,`rgba(255,244,200,${0.7*flash})`);g.addColorStop(1,"rgba(255,244,200,0)");
+        cx.fillStyle=g;cx.beginPath();cx.arc(0,0,70,0,7);cx.fill();}
+      if(isNight){cx.strokeStyle="rgba(255,240,190,.3)";cx.lineWidth=5;
+        cx.beginPath();cx.moveTo(0,0);cx.lineTo(Math.cos(state.t*0.8)*130,Math.sin(state.t*0.8)*130);cx.stroke();}
       break;}
     case "mile0":{
       cx.fillStyle="#8f8c84";cx.fillRect(-20,-8,9,18);cx.fillRect(11,-8,9,18);
@@ -2462,18 +2521,55 @@ function drawLandSprite(l,p,f){
       if(isNight){cx.fillStyle="rgba(90,160,255,.3)";cx.fillRect(x-w/2,y-h*0.37,w,h*0.05);}
       break;}
     case "wharf":{
-      const cols=["#c0392b","#3a6ea8","#e8c23a"];
-      const w=50*sc,h=44*sc;
-      cx.fillStyle="#8f8c84";cx.fillRect(x-w*1.9,y-h*0.05,w*3.8,h*0.09);
-      for(let i=0;i<3;i++){
-        const ox=x+(i-1)*w*1.18, hh=h*(1-(i%2)*0.12);
+      const cols=["#c0392b","#3a6ea8","#e8c23a","#d4663a","#5a9a6a"];
+      const w=44*sc,h=40*sc;
+      /* timber dock */
+      cx.fillStyle=isNight?"#3a352a":"#9a8458";cx.fillRect(x-w*2.4,y-h*0.04,w*4.8,h*0.12);
+      cx.fillStyle=isNight?"#2a2620":"#7a6848";for(let dx=-2.3;dx<2.4;dx+=0.22)cx.fillRect(x+dx*w,y-h*0.04,w*0.03,h*0.12);
+      for(let i=0;i<5;i++){
+        const ox=x+(i-2)*w*0.95, hh=h*(1-(i%2)*0.12);
         cx.fillStyle=cols[i];cx.fillRect(ox-w/2,y-hh,w,hh);
-        cx.fillStyle="#eef0f4";
-        cx.beginPath();cx.moveTo(ox-w*0.58,y-hh);cx.lineTo(ox,y-hh*1.35);cx.lineTo(ox+w*0.58,y-hh);cx.closePath();cx.fill();
+        cx.fillStyle=isNight?"#2a2620":"#eef0f4";
+        cx.beginPath();cx.moveTo(ox-w*0.58,y-hh);cx.lineTo(ox,y-hh*1.32);cx.lineTo(ox+w*0.58,y-hh);cx.closePath();cx.fill();
         cx.fillStyle=cols[i];
-        cx.beginPath();cx.moveTo(ox-w*0.48,y-hh);cx.lineTo(ox,y-hh*1.27);cx.lineTo(ox+w*0.48,y-hh);cx.closePath();cx.fill();
+        cx.beginPath();cx.moveTo(ox-w*0.48,y-hh);cx.lineTo(ox,y-hh*1.24);cx.lineTo(ox+w*0.48,y-hh);cx.closePath();cx.fill();
         if(sc>0.2){cx.fillStyle=isNight?"#ffd97a":"#1c2733";
-          cx.fillRect(ox-w*0.28,y-hh*0.7,w*0.2,hh*0.3);cx.fillRect(ox+w*0.08,y-hh*0.7,w*0.2,hh*0.3);}}
+          cx.fillRect(ox-w*0.26,y-hh*0.68,w*0.18,hh*0.28);cx.fillRect(ox+w*0.08,y-hh*0.68,w*0.18,hh*0.28);}}
+      /* the fish-and-chips kiosk */
+      cx.fillStyle="#c43a2e";cx.fillRect(x+w*2.0,y-h*0.5,w*0.7,h*0.5);
+      cx.fillStyle="#2e6da4";cx.fillRect(x+w*2.0,y-h*0.5,w*0.7,h*0.12);
+      break;}
+    case "reef":{
+      /* The Reef, 21 Erie St — curved glass towers, stepped balconies, peaked crown */
+      const w=120*sc, tan=isNight?"#4a4438":"#cabfa2", brown=isNight?"#3a2c22":"#7a5a44", glass=isNight?"#1c3a4a":"#9fcadf";
+      cx.fillStyle=isNight?"#3a3833":"#8a8276";cx.fillRect(x-w*0.34,y+w*0.18,w*0.68,w*0.1);   /* stone base */
+      cx.fillStyle=tan;cx.fillRect(x-w*0.3,y-w*0.34,w*0.6,w*0.52);
+      cx.fillStyle=brown;cx.fillRect(x+w*0.06,y-w*0.34,w*0.1,w*0.52);
+      cx.fillStyle=glass;for(let r=0;r<5;r++)cx.fillRect(x-w*0.28,y-w*0.3+r*w*0.11,w*0.56,w*0.05);  /* balcony glass */
+      /* curved glass corner tower (left) */
+      cx.fillStyle=glass;cx.beginPath();cx.arc(x-w*0.3,y-w*0.08,w*0.12,Math.PI*0.5,Math.PI*1.5);cx.fill();
+      cx.fillStyle=isNight?"#244a5c":"#7fb4cc";cx.beginPath();cx.arc(x-w*0.3,y-w*0.08,w*0.12,-Math.PI*0.5,Math.PI*0.5);cx.fill();
+      /* stepped balconies right */
+      cx.fillStyle=tan;for(let r=0;r<3;r++)cx.fillRect(x+w*0.24+r*w*0.04,y-w*0.2+r*w*0.13,w*0.12-r*w*0.02,w*0.1);
+      /* peaked roof crown */
+      cx.fillStyle=isNight?"#2c2622":"#b0a48c";
+      cx.beginPath();cx.moveTo(x-w*0.3,y-w*0.34);cx.lineTo(x-w*0.22,y-w*0.5);cx.lineTo(x-w*0.13,y-w*0.36);cx.lineTo(x-w*0.04,y-w*0.52);cx.lineTo(x+w*0.04,y-w*0.34);cx.closePath();cx.fill();
+      if(isNight){cx.fillStyle="rgba(255,228,150,.55)";for(let r=0;r<5;r++)cx.fillRect(x-w*0.28,y-w*0.3+r*w*0.11,w*0.56,w*0.02);}
+      break;}
+    case "navy":{
+      /* CFB Esquimalt — a haze-grey frigate alongside, crane behind */
+      const w=200*sc, grey=isNight?"#3a4048":"#6e757e", greyD=isNight?"#2a3036":"#565c64";
+      cx.fillStyle=isNight?"#2a2c30":"#5a6068";cx.fillRect(x-w*0.5,y+w*0.06,w,w*0.05);          /* jetty */
+      cx.fillStyle=grey;cx.beginPath();
+      cx.moveTo(x-w*0.5,y-w*0.02);cx.lineTo(x-w*0.42,y-w*0.08);cx.lineTo(x+w*0.42,y-w*0.08);cx.lineTo(x+w*0.52,y);cx.lineTo(x+w*0.46,y+w*0.05);cx.lineTo(x-w*0.46,y+w*0.05);cx.closePath();cx.fill();
+      cx.fillStyle=greyD;cx.fillRect(x-w*0.42,y-w*0.08,w*0.84,w*0.02);
+      cx.fillStyle=greyD;cx.fillRect(x-w*0.18,y-w*0.18,w*0.26,w*0.1);                            /* superstructure */
+      cx.fillStyle=grey;cx.fillRect(x-w*0.06,y-w*0.28,w*0.03,w*0.1);                             /* mast */
+      cx.fillStyle="#2a2c30";cx.fillRect(x-w*0.02,y-w*0.24,w*0.02,w*0.06);
+      cx.fillStyle=greyD;cx.fillRect(x-w*0.36,y-w*0.07,w*0.08,w*0.04);                           /* gun */
+      if(sc>0.15){cx.fillStyle=isNight?"#aab0b8":"#d8dce2";cx.font=`bold ${Math.max(7,w*0.05)}px sans-serif`;cx.textAlign="center";cx.fillText("331",x-w*0.26,y-w*0.005);}
+      cx.strokeStyle=isNight?"#caa84a":"#e8a83a";cx.lineWidth=Math.max(2,w*0.015);               /* crane */
+      cx.beginPath();cx.moveTo(x+w*0.36,y+w*0.06);cx.lineTo(x+w*0.36,y-w*0.16);cx.lineTo(x+w*0.5,y-w*0.1);cx.stroke();
       break;}
     case "light":{
       const w=52*sc,h=150*sc;
@@ -2491,8 +2587,20 @@ function drawLandSprite(l,p,f){
       cx.closePath();cx.fill();
       cx.fillStyle="#c0392b";cx.fillRect(x-w*0.32,y-h*0.46,w*0.64,h*0.09);
       cx.strokeStyle="#c0392b";cx.lineWidth=Math.max(1,2.2*sc);
-      cx.strokeRect(x-w*0.2,y-h*1.06,w*0.4,h*0.12);
+      cx.strokeRect(x-w*0.2,y-h*1.06,w*0.4,h*0.12);                          /* lantern room */
       cx.beginPath();cx.moveTo(x,y-h*1.06);cx.lineTo(x,y-h*1.3);cx.stroke();
+      /* the breakwater walkway running off to the side with its mural + railings */
+      const bw=w*2.6, bd=l.dir||1;
+      cx.fillStyle=isNight?"#55534c":"#9a978f";cx.fillRect(x+bd*w*0.85,y-h*0.02,bd*bw,h*0.08);
+      if(!isNight){const mc=["#e8b84a","#2e9ad4","#c43a2e","#3a8f74"];
+        for(let i=0;i<8;i++){cx.fillStyle=mc[i%4];cx.fillRect(x+bd*(w*0.85+bw*i/8),y+h*0.02,bd*bw/8,h*0.03);}}
+      cx.strokeStyle=isNight?"#6a6860":"#c8c4b8";cx.lineWidth=Math.max(1,1.5*sc);   /* rail */
+      cx.beginPath();cx.moveTo(x+bd*w*0.85,y-h*0.02);cx.lineTo(x+bd*(w*0.85+bw),y-h*0.02);cx.stroke();
+      /* the flashing beacon — day AND night */
+      const flash=Math.pow(Math.max(0,Math.sin(state.t*2.2)),6);
+      if(flash>0.04){const g=cx.createRadialGradient(x,y-h*1.0,2,x,y-h*1.0,80*sc);
+        g.addColorStop(0,`rgba(255,244,200,${0.85*flash})`);g.addColorStop(1,"rgba(255,244,200,0)");
+        cx.fillStyle=g;cx.beginPath();cx.arc(x,y-h*1.0,80*sc,0,7);cx.fill();}
       if(isNight){
         const g=cx.createRadialGradient(x,y-h,2,x,y-h,90*sc);
         g.addColorStop(0,"rgba(255,240,190,.8)");g.addColorStop(1,"rgba(255,240,190,0)");
@@ -2873,6 +2981,8 @@ const LANDMARK_SUB={
   "Chinatown Gate":"Gate of Harmonious Interest",
   "Johnson St Bridge":"The Blue Bridge",
   "Fisherman's Wharf":"Floating Village",
+  "The Reef":"21 Erie St",
+  "CFB Esquimalt":"Royal Canadian Navy",
   "Ogden Point":"Cruise & Breakwater",
   "Mile 0":"End of the Trans-Canada",
   "Beacon Hill Park":"200 Acres of Coastline",
@@ -3895,7 +4005,7 @@ function endTitle(){
 buildTrack(false);
 renderGarage();
 startTitle();
-(function(){const b=document.getElementById("buildtag");if(b)b.textContent="engine ready · v40 · Sidney";})();
+(function(){const b=document.getElementById("buildtag");if(b)b.textContent="engine ready · v41";})();
 let last=performance.now();
 let frameErrs=0;
 function loop(now){
