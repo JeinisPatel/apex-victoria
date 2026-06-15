@@ -208,8 +208,8 @@
 <div class="tc" id="tc-throttle">&#9650;</div>
 <div class="tc" id="tc-boost">&#9889;</div>
 <div id="kbd-legend">
-  <b>V</b> view (cockpit/chase/top) &nbsp; <b>P</b> pit &nbsp; <b>R</b> mirrors &nbsp; <b>N</b> music &nbsp; <b>M</b> mute
-  &nbsp;<span style="opacity:.5">·</span>&nbsp; <span class="vtag">v43</span>
+  <b>V</b> view (cockpit/chase/bumper/top) &nbsp; <b>P</b> pit &nbsp; <b>R</b> mirrors &nbsp; <b>N</b> music &nbsp; <b>M</b> mute
+  &nbsp;<span style="opacity:.5">·</span>&nbsp; <span class="vtag">v44</span>
 </div>
 <div id="tc-strip">
   <div class="tcbtn" id="tc-view"><span class="ic">◱</span><span class="lb">VIEW</span></div>
@@ -291,6 +291,8 @@
     <div class="panel" id="upgrades">
       <h3 id="garage-team">Garage — Patel GP</h3>
       <div id="up-rows"></div>
+      <div style="margin-top:11px;font-size:11px;color:var(--dim);letter-spacing:.06em">LIVERY</div>
+      <div id="livery-row" style="display:flex;flex-wrap:wrap;gap:7px;margin-top:6px"></div>
     </div>
     <div class="panel" id="event-card">
       <h3>Next Event <span id="e-num" style="float:right;color:var(--dim)"></span></h3>
@@ -317,6 +319,14 @@
     </div>
   </div>
   <h2 style="font-size:12.5px;max-width:640px">Phones: hold the on-screen pedals · Keys: ↑/W throttle · ↓/S brake · ←→/A D steer · Space handbrake · <b style="color:var(--teal)">Shift = BOOST</b> · V view · M mute · N music · R mirrors · P pit<br>Career progress lives in this session — finish the season before you close the tab, counsel.</h2>
+</div>
+
+<!-- QUALIFYING RESULT -->
+<div class="veil" id="qualiveil" style="display:none">
+  <h1>QUALIFYING</h1>
+  <h2 id="q-sub" style="font-size:13.5px;max-width:560px"></h2>
+  <div class="panel" style="min-width:380px"><h3>Starting Grid</h3><div id="q-grid"></div></div>
+  <button class="btn teal" id="q-racebtn">Lights Out — Start the Race</button>
 </div>
 
 <!-- POST-RACE REWARDS -->
@@ -365,7 +375,7 @@ const UPG={
   boost:{nm:"KERS Boost",desc:"+1 boost charge per race / lvl",base:180,max:4},
 };
 const meta={credits:350,xp:0,lvl:1,event:0,points:{},up:{engine:0,brakes:0,tyres:0,boost:0},
-  diff:1, weatherPick:"dynamic", todPick:"auto", circuit:"harbour", driver:"J. PATEL", teamName:"Patel GP", seenHowto:false};
+  diff:1, weatherPick:"dynamic", todPick:"auto", circuit:"harbour", driver:"J. PATEL", teamName:"Patel GP", livery:0, seenHowto:false};
 function setDriverName(raw){
   let s=(raw||"").replace(/[<>]/g,"").trim().slice(0,16);
   if(!s)s="J. PATEL";
@@ -409,6 +419,18 @@ for(const t of TEAMS){
   t.lite="#"+t.c.slice(1).match(/../g).map(h=>Math.min(255,(parseInt(h,16)+95)).toString(16).padStart(2,"0")).join("");
 }
 const PLAYER_TEAM={n:"Patel GP", c:"#39d2c0", c2:"#0e5a52", lite:"#a8efe6"};
+const LIVERIES=[
+  {n:"Teal",     c:"#39d2c0", c2:"#0e5a52", lite:"#a8efe6"},
+  {n:"Crimson",  c:"#e8443a", c2:"#6a1a14", lite:"#f5a89e"},
+  {n:"Sunburst", c:"#f0b429", c2:"#7a5410", lite:"#ffe39e"},
+  {n:"Azure",    c:"#3a78c0", c2:"#16314f", lite:"#a8cdf0"},
+  {n:"Magenta",  c:"#d63a9a", c2:"#6a1648", lite:"#f2a8d6"},
+  {n:"Lime",     c:"#7ac043", c2:"#2e5418", lite:"#cde8a0"},
+  {n:"Tangerine",c:"#e8743a", c2:"#6a2e14", lite:"#f7c2a0"},
+  {n:"Violet",   c:"#8a5cd0", c2:"#3a1d6a", lite:"#cdb0f0"},
+  {n:"Gunmetal", c:"#9aa3b0", c2:"#3a3f48", lite:"#d8dce2"}];
+function applyLivery(){ const L=LIVERIES[meta.livery]||LIVERIES[0];
+  PLAYER_TEAM.c=L.c; PLAYER_TEAM.c2=L.c2; PLAYER_TEAM.lite=L.lite; }
 for(const t of TEAMS)meta.points[t.n]=0; meta.points["__PLAYER__"]=0;
 
 /* ---------------- circuit ---------------- */
@@ -537,7 +559,7 @@ function bakeTrack(){
 /* ---------------- cars & physics ---------------- */
 const BASE={MAXV:560,ACC:300,BRK:560,TURN:2.6};
 const DRAG=0.42, OFFROAD=2.2;
-const DAMAGE_ON=()=>meta.diff===2;          /* Ace only */
+const DAMAGE_ON=()=>meta.diff===2 && state.mode!=="quali";   /* Ace only; never in qualifying */
 const HARD_HIT=190;                          /* closing-speed threshold for a damaging car hit (player involved) */
 const AI_HARD_HIT=330;                       /* AI-vs-AI needs a much bigger shunt -> no pack-wide attrition */
 const OFF_HIT=300;                           /* speed threshold for a damaging off / wall moment */
@@ -558,6 +580,8 @@ function applyDamage(c,severity){
   if(!c.isPlayer && c.damage>=3 && player && !player.finished)flash("YELLOW FLAG — CAR OUT AHEAD");
 }
 let cars=[], player=null, LAPS=3;
+let qualiGrid=null;
+const BASELAP={harbour:41, gorge:32, sidney:35.5};   /* per-circuit reference lap for the quali grid */
 function playerStats(){
   const v=1+vetBonus();
   return {
@@ -595,7 +619,7 @@ const keys={};
 addEventListener("keydown",e=>{keys[e.key.toLowerCase()]=true;
   if(["arrowup","arrowdown","arrowleft","arrowright"," "].includes(e.key.toLowerCase()))e.preventDefault();
   if(e.key==="Shift")tryBoost();
-  if(e.key.toLowerCase()==="v")state.view={cockpit:"chase",chase:"top",top:"cockpit"}[state.view]||"cockpit";
+  if(e.key.toLowerCase()==="v")state.view={cockpit:"chase",chase:"bumper",bumper:"top",top:"cockpit"}[state.view]||"cockpit";
   if(e.key.toLowerCase()==="k"&&state.running&&replayBuf.length>10)openReplay();
   if(state.replay){
     if(e.key===" "){state.replayPlaying=!state.replayPlaying;e.preventDefault&&e.preventDefault();}
@@ -873,6 +897,20 @@ function renderGarage(){
     b.onclick=()=>{meta.credits-=cost;meta.up[k]++;sfx.tick();renderGarage();};
     div.appendChild(b);rows.appendChild(div);
   }
+  // livery picker
+  applyLivery();
+  const lr=document.getElementById("livery-row");
+  if(lr){ lr.innerHTML="";
+    LIVERIES.forEach((L,i)=>{ const sw=document.createElement("button");
+      sw.title=L.n;
+      sw.style.cssText="width:30px;height:30px;border-radius:7px;cursor:pointer;background:"+L.c+
+        ";border:2px solid "+(i===meta.livery?"#fff":"rgba(255,255,255,.22)")+
+        ";box-shadow:"+(i===meta.livery?"0 0 8px "+L.c:"none")+";transition:transform .08s";
+      sw.onmouseenter=()=>sw.style.transform="scale(1.12)";
+      sw.onmouseleave=()=>sw.style.transform="scale(1)";
+      sw.onclick=()=>{meta.livery=i;applyLivery();sfx.tick&&sfx.tick();renderGarage();};
+      lr.appendChild(sw); });
+  }
   // event
   const ev=EVENTS[meta.event];
   document.getElementById("e-num").textContent="Round "+(meta.event+1)+" / "+EVENTS.length;
@@ -919,7 +957,7 @@ function renderGarage(){
 }
 function startRace(){
   const ev=EVENTS[meta.event];
-  LAPS=state.mode==="tt"?3:ev.laps;
+  LAPS=state.mode==="tt"?3:state.mode==="quali"?1:ev.laps;
   /* time of day: auto follows the event, else the player's pick */
   /* auto follows each event's own time-of-day (day/dusk/night); else the player's pick */
   let effTod = meta.todPick;
@@ -951,11 +989,13 @@ function startRace(){
   dryLine=new Float32Array(N);   /* 0 = wet, 1 = swept dry; starts wet in the wet */
   if(state.wx==="dry"&&!state.dynamic)dryLine.fill(1);
   else if(state.dynamic)dryLine.fill(1);   /* dynamic starts dry */
-  trackIdx=isNight?1:0;music.next=0;
+  applyLivery(); trackIdx=0;music.next=0;          /* Nightdrive Trance is the default */
   cars=[];
   /* grid order from championship: leader starts P1. Round 1 keeps the classic P8 start. */
   let gridSlots=[0,1,2,3,4,5,6,7];
-  if(state.mode==="career" && meta.event>0){
+  if(state.mode==="career" && qualiGrid){
+    gridSlots=qualiGrid.map(q=>q.pk==="__PLAYER__"?7:TEAMS.findIndex(t=>t.n===q.pk));
+  } else if(state.mode==="career" && meta.event>0){
     const order=[{me:true,pk:"__PLAYER__"},...TEAMS.map(t=>({me:false,pk:t.n}))]
       .sort((a,b)=>(meta.points[b.pk]||0)-(meta.points[a.pk]||0));
     const playerRank=order.findIndex(o=>o.me); /* 0-based grid slot */
@@ -966,6 +1006,8 @@ function startRace(){
   if(state.mode==="tt"){
     addCar(7,true,ev,0); player=cars[0];
     player.bestLap=meta.ttBest||0;
+  } else if(state.mode==="quali"){
+    addCar(7,true,ev,0); player=cars[0];
   } else {
     for(let s=0;s<8;s++){const carId=gridSlots[s];
       if(carId===7)addCar(7,true,ev,s); else addCar(carId,false,ev,s);}
@@ -975,6 +1017,12 @@ function startRace(){
   if(!tutorialDone&&state.mode==="career"){state.tutArmed=true;}else{state.tutArmed=false;}
   show("garage",false);hudShow(true);
   document.getElementById("lights").style.display="flex";
+  if(state.mode==="quali"){
+    state.started=true; state.countdown=0;
+    player.v=player.maxv*0.55; player.lapStart=0; state.raceT=0;
+    document.getElementById("lights").style.display="none";
+    flash("QUALIFYING — ONE FLYING LAP, PUSH!");
+  }
   // boost pips
   const bp=document.getElementById("boost-pips");bp.innerHTML="";
   for(let i=0;i<playerStats().boostMax;i++){const p=document.createElement("div");p.className="pip on";bp.appendChild(p);}
@@ -993,8 +1041,8 @@ function doStartTT(e){
   state.mode="tt";initAudio();startRace();
 }
 (function(){const b=document.getElementById("racebtn");
-  b.onclick=(e)=>{state.mode="career";doStart(e);};
-  if(b.addEventListener)b.addEventListener("touchend",(e)=>{state.mode="career";doStart(e);},{passive:false});
+  b.onclick=(e)=>{state.mode="quali";qualiGrid=null;doStart(e);};
+  if(b.addEventListener)b.addEventListener("touchend",(e)=>{state.mode="quali";qualiGrid=null;doStart(e);},{passive:false});
   const tt=document.getElementById("ttbtn");
   if(tt){tt.onclick=doStartTT;if(tt.addEventListener)tt.addEventListener("touchend",doStartTT,{passive:false});}
 })();
@@ -1025,6 +1073,10 @@ function togglePause(){
   const pb=document.getElementById("tc-pause");
   if(pb&&pb.addEventListener)pb.addEventListener("pointerdown",e=>{e.preventDefault();
     if(state.running&&state.started&&!state.over)togglePause();});
+})();
+(function(){const qb=document.getElementById("q-racebtn");
+  if(qb){const go=(e)=>{if(e&&e.preventDefault)e.preventDefault();show("qualiveil",false);state.mode="career";initAudio();startRace();};
+    qb.onclick=go; if(qb.addEventListener)qb.addEventListener("touchend",go,{passive:false});}
 })();
 document.getElementById("paddockbtn").onclick=()=>{
   show("rewardveil",false);
@@ -1097,7 +1149,38 @@ function stopConfetti(){
   const cv2=document.getElementById("confetti");
   if(cv2&&cv2.getContext){const c=cv2.getContext("2d");c.clearRect(0,0,cv2.width,cv2.height);}
 }
+function qualiComplete(){
+  state.over=true; state.running=false;
+  const ev=EVENTS[meta.event];
+  const tp=player.bestLap||player.lastLap||BASELAP[meta.circuit]||40;
+  const base=BASELAP[meta.circuit]||tp;
+  const entries=[{pk:"__PLAYER__",name:meta.driver,time:tp,me:true}];
+  for(const t of TEAMS){
+    const skill=(ev.ai[0]+Math.random()*(ev.ai[1]-ev.ai[0]))*DIFFS[meta.diff].mul;
+    entries.push({pk:t.n,name:t.n,time:base*(1/skill)*(1+(Math.random()-0.5)*0.04),me:false});
+  }
+  entries.sort((a,b)=>a.time-b.time);
+  qualiGrid=entries;
+  setTimeout(()=>{ hudShow(false); showQuali(entries); }, 650);
+}
+function showQuali(entries){
+  const meIdx=entries.findIndex(e=>e.me), pp=meIdx+1;
+  const sub=document.getElementById("q-sub");
+  if(sub)sub.innerHTML="Your flying lap: <b>"+fmt(entries[meIdx].time)+"</b> — you line up <b style='color:var(--teal)'>P"+pp+" of "+entries.length+"</b>"+(pp===1?" &mdash; POLE!":"");
+  const gd=document.getElementById("q-grid");
+  if(gd){ gd.innerHTML="";
+    entries.forEach((e,i)=>{
+      const gap=i===0?"":"+"+(e.time-entries[0].time).toFixed(2)+"s";
+      const row=document.createElement("div");
+      row.style.cssText="display:flex;justify-content:space-between;gap:14px;padding:3px 7px;border-radius:5px;font-size:13px"+(e.me?";background:rgba(57,210,192,.15);color:var(--teal);font-weight:700":"");
+      row.innerHTML="<span style='width:30px'>P"+(i+1)+"</span><span style='flex:1;text-align:left'>"+(e.me?(meta.driver+" — you"):e.name)+"</span><span>"+fmt(e.time)+" <span style='color:var(--dim)'>"+gap+"</span></span>";
+      gd.appendChild(row);
+    });
+  }
+  show("qualiveil",true);
+}
 function finishRace(){
+  if(state.mode==="quali"){ qualiComplete(); return; }
   state.over=true;
   if(state.mode==="tt"){
     const improved=player.bestLap&&(!meta.ttBest||player.bestLap<meta.ttBest);
@@ -1197,7 +1280,7 @@ function update(dt){
     const steps=[
       [0.3,"Hold <b>throttle</b> (↑ / W or the pedal) to launch"],
       [4,"<b>Brake</b> (↓ / S) before the corners — the racing line is dashed"],
-      [8.5,"Tap <b>V</b> to cycle cockpit / chase / top view"],
+      [8.5,"Tap <b>V</b> to cycle cockpit / chase / bumper / top view"],
       [12.5,"On the long races, press <b>P</b> to pit for fresh tyres"],
       [16.5,"<b>Esc</b> (or II) pauses. Good luck out there!"],
     ];
@@ -1320,7 +1403,7 @@ function update(dt){
       const lb=mus.querySelector&&mus.querySelector(".lb");if(lb)lb.textContent=music.on?TRACKS[trackIdx].n.slice(0,4).toUpperCase():"MUS";}
     const mut=document.getElementById("tc-mute");if(mut){mut.classList.toggle("off",muted);mut.classList.toggle("alert",muted);}
     const pit=document.getElementById("tc-pit");if(pit)pit.classList.toggle("armed",!!(player&&player.wantPit));
-    const vw=document.getElementById("tc-view");if(vw){const lb=vw.querySelector&&vw.querySelector(".lb");if(lb)lb.textContent={cockpit:"CHASE",chase:"TOP",top:"COCK"}[state.view]||"COCK";}
+    const vw=document.getElementById("tc-view");if(vw){const lb=vw.querySelector&&vw.querySelector(".lb");if(lb)lb.textContent={cockpit:"CHASE",chase:"BMPR",bumper:"TOP",top:"COCK"}[state.view]||"COCK";}
   }
   const yf=document.getElementById("yellow-flag");
   if(yf)yf.style.display=(state.yellowT>0&&state.started)?"block":"none";
@@ -3169,7 +3252,8 @@ function drawCockpit(){
   const yaw=player.a;
   const cyaw=Math.cos(yaw), syaw=Math.sin(yaw);
   const chase=state.view==="chase";                          /* third-person follow camera */
-  const camBack=chase?98:CAM.BACK, camH=chase?42:CAM.H;
+  const bumper=state.view==="bumper";                        /* low nose / hood cam */
+  const camBack=chase?98:bumper?-4:CAM.BACK, camH=chase?42:bumper?7:CAM.H;
   const camx=player.x-cyaw*camBack, camy=player.y-syaw*camBack;
   /* FOV: a wider field at speed = lower focal length, so the world rushes past faster */
   const f=VH*0.95*(1-0.16*(state.camFov||0));
@@ -3353,7 +3437,7 @@ function drawCockpit(){
     cx.fillStyle=hl;cx.fillRect(0,HOR-20,VW,VH-HOR+20);
   }
   if(state.mirrors&&!chase)drawMirrors(cyaw,syaw,f,HOR,shakeX,shakeY);
-  if(chase){ drawRain(); drawFogGlare(); drawSpeedFX(); }   /* FX only; no cockpit frame */
+  if(chase||bumper){ drawRain(); drawFogGlare(); drawSpeedFX(); }   /* FX only; no cockpit frame */
   else drawCockpitOverlay();
   if(player.boostT>0){
     cx.strokeStyle="rgba(57,210,192,"+(0.25+0.2*Math.sin(state.t*30))+")";
@@ -3573,7 +3657,7 @@ function drawCockpitOverlay(){
   /* nose of the car */
   const noseTip=VH*0.80, noseWTip=VW*0.016, noseWBase=VW*0.10;
   let g=cx.createLinearGradient(0,noseTip,0,baseY);
-  g.addColorStop(0,"#2aa394");g.addColorStop(0.6,PLAYER_TEAM.c);g.addColorStop(1,"#0e5a52");
+  g.addColorStop(0,PLAYER_TEAM.lite);g.addColorStop(0.6,PLAYER_TEAM.c);g.addColorStop(1,PLAYER_TEAM.c2);
   cx.fillStyle=g;
   cx.beginPath();
   cx.moveTo(cxm-noseWTip,noseTip);cx.lineTo(cxm+noseWTip,noseTip);
@@ -3581,7 +3665,7 @@ function drawCockpitOverlay(){
   cx.fillStyle="rgba(10,12,16,.5)";
   cx.fillRect(cxm-noseWTip*0.5,noseTip,noseWTip,baseY-noseTip);
   /* front wing hint at the tip */
-  cx.fillStyle="#0e5a52";
+  cx.fillStyle=PLAYER_TEAM.c2;
   cx.fillRect(cxm-VW*0.055,noseTip-6,VW*0.11,7);
   /* side bodywork sweeping off-screen */
   cx.fillStyle="rgba(14,90,82,.92)";
@@ -3788,6 +3872,12 @@ function mSaw(t,freq,dur,g,out,voices){         /* detuned supersaw with a filte
   lp.connect(gn);gn.connect(out||music.gain);
 }
 const TRACKS=[
+  /* --- TRANCE: darker, driving "progressive" trance (F# minor) 140bpm — now the default --- */
+  {n:"Nightdrive Trance",bpm:140,bass:[30,30,30,30,30,30,30,30,37,37,37,37,35,35,35,35],
+   arp:[[66,69,73,78],[64,69,73,76],[61,64,69,73],[66,73,78,81]],wave:"sawtooth",trance:true},
+  /* --- TRANCE: classic four-on-the-floor uplifting trance, supersaw feel (A minor) 138bpm --- */
+  {n:"Uplift",bpm:138,bass:[33,33,33,33,33,33,33,33,29,29,29,29,40,40,40,40],
+   arp:[[69,72,76,81],[68,72,75,80],[64,67,72,76],[69,76,81,84]],wave:"sawtooth",trance:true},
   {n:"Drive",bpm:138,bass:[45,45,48,45,43,43,46,43,41,41,45,41,43,46,48,50],
    arp:[[69,72,76],[67,70,74],[65,69,72],[67,71,74]],wave:"sawtooth"},
   {n:"Nocturne",bpm:104,bass:[40,40,40,43,38,38,38,41,36,36,36,40,41,43,45,43],
@@ -3805,13 +3895,7 @@ const TRACKS=[
    arp:[[76,79,83],[74,78,81],[71,76,79],[74,78,83]],wave:"sawtooth"},
   /* --- tense build-up: sparse, suspense, rising (C minor) --- */
   {n:"Grid Walk",bpm:96,bass:[36,36,36,36,39,39,43,43,36,36,36,36,41,41,43,46],
-   arp:[[60,63,67],[60,63,67],[63,67,70],[67,70,75]],wave:"triangle"},
-  /* --- TRANCE: classic four-on-the-floor uplifting trance, supersaw feel (A minor) 138bpm --- */
-  {n:"Uplift",bpm:138,bass:[33,33,33,33,33,33,33,33,29,29,29,29,40,40,40,40],
-   arp:[[69,72,76,81],[68,72,75,80],[64,67,72,76],[69,76,81,84]],wave:"sawtooth",trance:true},
-  /* --- TRANCE: darker, driving "progressive" trance (F# minor) 140bpm --- */
-  {n:"Nightdrive Trance",bpm:140,bass:[30,30,30,30,30,30,30,30,37,37,37,37,35,35,35,35],
-   arp:[[66,69,73,78],[64,69,73,76],[61,64,69,73],[66,73,78,81]],wave:"sawtooth",trance:true}];
+   arp:[[60,63,67],[60,63,67],[63,67,70],[67,70,75]],wave:"triangle"}];
 let trackIdx=0;
 function M_TRACK(){return TRACKS[trackIdx];}
 const M_BASS_=()=>M_TRACK().bass, M_ARP_=()=>M_TRACK().arp;
@@ -3955,7 +4039,7 @@ if(touchMode&&typeof document.body!=="undefined"&&document.body){
   if(bb&&bb.addEventListener)bb.addEventListener("pointerdown",e=>{e.preventDefault();initAudio();tryBoost();});
   function tap(id,fn){const el=document.getElementById(id);
     if(el&&el.addEventListener)el.addEventListener("pointerdown",e=>{e.preventDefault();fn();});}
-  tap("tc-view",()=>{state.view={cockpit:"chase",chase:"top",top:"cockpit"}[state.view]||"cockpit";});
+  tap("tc-view",()=>{state.view={cockpit:"chase",chase:"bumper",bumper:"top",top:"cockpit"}[state.view]||"cockpit";});
   tap("tc-pit",()=>{if(state.started&&player&&!player.finished){player.wantPit=!player.wantPit;
     flash(player.wantPit?"PIT ARMED":"PIT CANCELLED");}});
   tap("tc-mirror",()=>{state.mirrors=!state.mirrors;flash(state.mirrors?"MIRRORS ON":"MIRRORS OFF");});
@@ -4047,7 +4131,7 @@ function endTitle(){
 buildTrack(false);
 renderGarage();
 startTitle();
-(function(){const b=document.getElementById("buildtag");if(b)b.textContent="engine ready · v43";})();
+(function(){const b=document.getElementById("buildtag");if(b)b.textContent="engine ready · v44";})();
 let last=performance.now();
 let frameErrs=0;
 function loop(now){
