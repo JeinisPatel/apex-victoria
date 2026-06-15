@@ -209,7 +209,7 @@
 <div class="tc" id="tc-boost">&#9889;</div>
 <div id="kbd-legend">
   <b>V</b> view (cockpit/chase/bumper/top) &nbsp; <b>P</b> pit &nbsp; <b>R</b> mirrors &nbsp; <b>N</b> music &nbsp; <b>M</b> mute
-  &nbsp;<span style="opacity:.5">·</span>&nbsp; <span class="vtag">v50</span>
+  &nbsp;<span style="opacity:.5">·</span>&nbsp; <span class="vtag">v51</span>
 </div>
 <div id="tc-strip">
   <div class="tcbtn" id="tc-view"><span class="ic">◱</span><span class="lb">VIEW</span></div>
@@ -288,17 +288,13 @@
       <div class="statline"><span>Veteran bonus</span><span id="d-bonus">+0% all stats</span></div>
       <div class="statline"><span>Season points</span><span id="d-pts">0</span></div>
     </div>
-    <div class="panel" id="upgrades">
-      <h3 id="garage-team">Garage — Patel GP</h3>
-      <div id="up-rows"></div>
-      <div style="margin-top:11px;font-size:11px;color:var(--dim);letter-spacing:.06em">LIVERY</div>
-      <div id="livery-row" style="display:flex;flex-wrap:wrap;gap:7px;margin-top:6px"></div>
-    </div>
     <div class="panel" id="event-card">
       <h3>Next Event <span id="e-num" style="float:right;color:var(--dim)"></span></h3>
       <div class="ename" id="e-name"></div>
       <div id="e-tags"></div>
       <div class="edesc" id="e-desc"></div>
+      <div class="statline" style="margin-top:2px"><span>Circuit</span><span id="sel-circuit" style="cursor:pointer;color:var(--teal);font-weight:700"></span></div>
+      <div id="circuit-blurb" style="font-size:11px;color:var(--dim);margin:2px 0 9px;line-height:1.5"></div>
       <div class="statline"><span>Laps</span><span id="e-laps"></span></div>
       <div class="statline"><span>Grid pace</span><span id="e-ai"></span></div>
       <div class="statline"><span>Prize mult.</span><span id="e-mult"></span></div>
@@ -306,12 +302,16 @@
       <div id="ace-warn" style="display:none;font-size:11px;line-height:1.5;color:#ef8a7e;margin:2px 0 4px;padding:6px 10px;background:rgba(232,68,58,.1);border-left:2px solid #e8443a;border-radius:5px">⚠ ACE: hard crashes cause damage. Lose a wing, then pace — three big hits and your car is out (DNF). Same for rivals.</div>
       <div class="statline"><span>Weather</span><span id="sel-wx" style="cursor:pointer;color:var(--teal)"></span></div>
       <div class="statline"><span>Time of day</span><span id="sel-tod" style="cursor:pointer;color:var(--teal)"></span></div>
-      <div class="statline"><span>Circuit</span><span id="sel-circuit" style="cursor:pointer;color:var(--teal)"></span></div>
-      <div id="circuit-blurb" style="font-size:11px;color:var(--dim);margin:2px 0 4px;line-height:1.5"></div>
       <div style="text-align:center;margin-top:14px;display:flex;gap:10px;justify-content:center">
         <button class="btn" id="racebtn">Go Racing</button>
         <button class="btn teal" id="ttbtn" style="padding:13px 26px">Time Trial</button>
       </div>
+    </div>
+    <div class="panel" id="upgrades">
+      <h3 id="garage-team">Garage — Patel GP</h3>
+      <div id="up-rows"></div>
+      <div style="margin-top:11px;font-size:11px;color:var(--dim);letter-spacing:.06em">LIVERY</div>
+      <div id="livery-row" style="display:flex;flex-wrap:wrap;gap:7px;margin-top:6px"></div>
     </div>
     <div class="panel" style="min-width:340px">
       <h3>Championship</h3>
@@ -4437,7 +4437,7 @@ function endTitle(){
 buildTrack(false);
 renderGarage();
 startTitle();
-(function(){const b=document.getElementById("buildtag");if(b)b.textContent="engine ready · v50";})();
+(function(){const b=document.getElementById("buildtag");if(b)b.textContent="engine ready · v51";})();
 let last=performance.now();
 let frameErrs=0;
 function loop(now){
